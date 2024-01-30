@@ -6,7 +6,7 @@ using Keyfactor.Orchestrators.Extensions;
 
 using Microsoft.Extensions.Logging;
 
-namespace Keyfactor.Extensions.Orchestrator.SampleOrchestratorExtension
+namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
     // The Inventory class implementes IAgentJobExtension and is meant to find all of the certificates in a given certificate store on a given server
     //  and return those certificates back to Keyfactor for storing in its database.  Private keys will NOT be passed back to Keyfactor Command 

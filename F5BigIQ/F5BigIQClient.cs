@@ -84,7 +84,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             JObject json = SubmitRequest(request);
             string certificateLocation = JsonConvert.DeserializeObject<F5CertificateLocation>(json.ToString()).CertificateLocation;
 
-            return "";
+            return new X509Certificate2(DownloadCertificateFile(certificateLocation));
         }
 
         private byte[] DownloadCertificateFile(string location)

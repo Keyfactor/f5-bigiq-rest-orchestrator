@@ -16,49 +16,112 @@ using Newtonsoft.Json.Linq;
 using RestSharp;
 using RestSharp.Authenticators;
 
+using Renci.SshNet;
+
 using Keyfactor.Logging;
 using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
+using System.IO;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
     internal class F5BigIQClient
     {
         ILogger logger;
-        RestClient Client { get; set; }
+        private string BaseUrl { get; set; }
+        private string UserId { get; set; }
+        private string Password { get; set; }
+        private RestClient Client { get; set; }
 
         F5BigIQClient(string baseUrl, string id, string pswd, bool useTokenAuth)
         {
             logger = LogHandler.GetClassLogger<F5BigIQClient>();
+            BaseUrl = baseUrl;
+            UserId = id;
+            Password = pswd;
             Client = GetRestClient(baseUrl, id, pswd, useTokenAuth); 
         }
 
-        internal List<F5Certificate> GetCertificates()
+        internal List<F5CertificateItem> GetCertificates()
         {
             logger.MethodEntry(LogLevel.Debug);
 
-            List<F5Certificate> sites = new List<F5Certificate>();
+            int CERTIFICATES_PER_PAGE = 50;
+            int currentPageIndex = 1;
 
-            int totalPages = 0;
+            List<F5CertificateItem> certificates = new List<F5CertificateItem>();
 
             do
             {
-                string RESOURCE = $"/mgmt/cm/adc-core/working-config/sys/file/ssl-cert?top=50";
+                string RESOURCE = $"/mgmt/cm/adc-core/working-config/sys/file/ssl-cert?top={CERTIFICATES_PER_PAGE.ToString()}&$skip={((currentPageIndex-1)*CERTIFICATES_PER_PAGE).ToString()}";
                 RestRequest request = new RestRequest(RESOURCE, Method.Get);
 
                 JObject json = SubmitRequest(request);
-                List<F5Certificate> pageOfSites = JsonConvert.DeserializeObject<List<F5Certificate>>(json.ToString());
-                if (pageOfSites.Count == 0)
+                F5Certificate pageOfCerts = JsonConvert.DeserializeObject<F5Certificate>(json.ToString());
+                if (pageOfCerts.CertificateItems.Count == 0)
                     break;
-                else
-                    page++;
 
-                sites.AddRange(pageOfSites);
+                certificates.AddRange(pageOfCerts.CertificateItems);
+
+                if (pageOfCerts.TotalPages == pageOfCerts.PageIndex)
+                    break;
+
+                currentPageIndex = pageOfCerts.PageIndex + 1;
             } while (1 == 1);
-
 
             logger.MethodExit(LogLevel.Debug);
 
-            return sites;
+            return certificates;
+        }
+
+        internal X509Certificate2 GetCertificate(string command)
+        {
+            logger.MethodEntry(LogLevel.Debug);
+
+            string fileLocation = string.Empty;
+            RestRequest request = new RestRequest(command.Replace("localhost", BaseUrl), Method.Get);
+
+            JObject json = SubmitRequest(request);
+            string certificateLocation = JsonConvert.DeserializeObject<F5CertificateLocation>(json.ToString()).CertificateLocation;
+
+            return "";
+        }
+
+        private byte[] DownloadCertificateFile(string location)
+        {
+            logger.MethodEntry(LogLevel.Debug);
+            logger.LogDebug($"DownloadCertificateFile: {location}");
+
+            byte[] rtnStore = new byte[] { };
+
+            using (ScpClient client = new ScpClient(BaseUrl, UserId, Password))
+            {
+                try
+                {
+                    logger.LogDebug($"SCP connection attempt from {BaseUrl}");
+                    client.Connect();
+
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        client.Download(location, stream);
+                        rtnStore = stream.ToArray();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    string msg = F5BigIQException.FlattenExceptionMessages(ex, "SCP Download Error: ");
+                    logger.LogError(msg);
+                    throw new F5BigIQException($"Error attempting SCP file transfer from {BaseUrl} .  Please contact your company's system administrator to verify connection and permission settings.", ex);
+                }
+                finally
+                {
+                    client.Disconnect();
+                }
+            }
+
+            logger.MethodExit(LogLevel.Debug);
+
+            return rtnStore;
         }
 
         private string GetAccessToken(string id, string pswd)

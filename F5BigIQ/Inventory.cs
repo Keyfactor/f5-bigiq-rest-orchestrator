@@ -7,11 +7,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 
 using Keyfactor.Logging;
 using Keyfactor.Orchestrators.Extensions;
+using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
 
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
@@ -31,10 +34,27 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 logger.LogDebug($"    {keyValue.Key}: {keyValue.Value}");
             }
 
+            dynamic properties = JsonConvert.DeserializeObject(config.CertificateStoreDetails.Properties);
+            bool ignoreSSLWarning = properties.IgnoreSSLWarning == null || string.IsNullOrEmpty(properties.IgnoreSSLWarning.Value) ? false : bool.Parse(properties.IgnoreSSLWarning.Value);
+            bool useTokenAuthentication = properties.UseTokenAuthentication == null || string.IsNullOrEmpty(properties.UseTokenAuthentication.Value) ? false : bool.Parse(properties.UseTokenAuthentication.Value);
+
             List<CurrentInventoryItem> inventoryItems = new List<CurrentInventoryItem>();
 
             try
             {
+                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.ServerUsername, config.ServerPassword, useTokenAuthentication, ignoreSSLWarning);
+                List<F5CertificateItem> certItems =  f5Client.GetCertificates();
+                foreach(F5CertificateItem certItem in certItems)
+                {
+                    X509Certificate2 x509Cert = f5Client.GetCertificateByLink(certItem.Link);
+                    inventoryItems.Add(new CurrentInventoryItem()
+                    {
+                        Alias = certItem.Alias,
+                        Certificates = x509Cert.
+                        ItemStatus = Orchestrators.Common.Enums.OrchestratorInventoryItemStatus.Unknown,
+                        a
+                    });
+                }
             }
             catch (Exception ex)
             {

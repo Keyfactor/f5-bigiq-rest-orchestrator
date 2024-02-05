@@ -14,4 +14,5 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
     {
         [JsonProperty("localFilePath")]
         internal string CertificateLocation { get; set; }
+    }
 }

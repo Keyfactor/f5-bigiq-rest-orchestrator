@@ -22,24 +22,32 @@ using Keyfactor.Logging;
 using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using System.Runtime.ConstrainedExecution;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
     internal class F5BigIQClient
     {
+        private const string GET_ENDPOINT = "/mgmt/cm/adc-core/working-config/sys/file/ssl-cert";
+        private const string POST_ENDPOINT = "/mgmt/cm/adc-core/tasks/certificate-management";
+        private const string UPLOAD_FOLDER = "/var/config/rest/downloads";
+
+        private const string ADD_COMMAND = "ADD_PKCS12";
+        private const string REPLACE_COMMAND = "REPLACE_PKCS12";
+
         ILogger logger;
         private string BaseUrl { get; set; }
         private string UserId { get; set; }
         private string Password { get; set; }
         private RestClient Client { get; set; }
 
-        F5BigIQClient(string baseUrl, string id, string pswd, bool useTokenAuth)
+        internal F5BigIQClient(string baseUrl, string id, string pswd, bool useTokenAuth, bool ignoreSSLWarning)
         {
             logger = LogHandler.GetClassLogger<F5BigIQClient>();
             BaseUrl = baseUrl;
             UserId = id;
             Password = pswd;
-            Client = GetRestClient(baseUrl, id, pswd, useTokenAuth); 
+            Client = GetRestClient(baseUrl, id, pswd, useTokenAuth, ignoreSSLWarning); 
         }
 
         internal List<F5CertificateItem> GetCertificates()
@@ -53,7 +61,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             do
             {
-                string RESOURCE = $"/mgmt/cm/adc-core/working-config/sys/file/ssl-cert?top={CERTIFICATES_PER_PAGE.ToString()}&$skip={((currentPageIndex-1)*CERTIFICATES_PER_PAGE).ToString()}";
+                string RESOURCE = $"{GET_ENDPOINT}?top={CERTIFICATES_PER_PAGE.ToString()}&$skip={((currentPageIndex-1)*CERTIFICATES_PER_PAGE).ToString()}";
                 RestRequest request = new RestRequest(RESOURCE, Method.Get);
 
                 JObject json = SubmitRequest(request);
@@ -74,7 +82,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             return certificates;
         }
 
-        internal X509Certificate2 GetCertificate(string command)
+        internal X509Certificate2 GetCertificateByLink(string command)
         {
             logger.MethodEntry(LogLevel.Debug);
 
@@ -83,8 +91,60 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             JObject json = SubmitRequest(request);
             string certificateLocation = JsonConvert.DeserializeObject<F5CertificateLocation>(json.ToString()).CertificateLocation;
+            string certs = DownloadCertificateFile(certificateLocation);
+            
+            CertificateCollectionConverter c = CertificateCollectionConverterFactory.FromPEM(certificateEntryAfterRemovalOfDelim);
+
+            return c.ToX509Certificate2Collection();
+
+            logger.MethodExit(LogLevel.Debug);
 
             return new X509Certificate2(DownloadCertificateFile(certificateLocation));
+        }
+
+        internal void AddReplaceCertificate(string storePath, string alias, string b64Certificate, string password, bool overwriteExisting)
+        {
+            logger.MethodEntry(LogLevel.Debug);
+
+            F5Certificate f5Certificate = GetCertificateByName(alias);
+
+            if (f5Certificate.TotalCertificates == 2)
+                throw new F5BigIQException($"Two or more certificates already exist with the alias name of {alias}.");
+            if (f5Certificate.TotalCertificates == 1 && !overwriteExisting)
+                throw new F5BigIQException($"Certificate with alias name {alias} already exists but Overwrite is set to FALSE.  Please re-schedule this job and select the Overwrite checkbox (set to TRUE) if you with to replace this certificate.");
+
+            string uploadFileName = Guid.NewGuid().ToString() + ".p12";
+            byte[] certBytes = Convert.FromBase64String(b64Certificate);
+
+            UploadCertificateFile(certBytes, uploadFileName);
+
+            F5CertificateAddRequest addRequest = new F5CertificateAddRequest()
+            {
+                Alias = alias,
+                FileLocation = uploadFileName,
+                Partition = storePath,
+                Password = password,
+                Command = f5Certificate.TotalCertificates == 1 ? REPLACE_COMMAND : ADD_COMMAND,
+                Reference = (f5Certificate.TotalCertificates == 1 ? new CertificateReference() { Link = f5Certificate.CertificateItems[0].Link.Replace("localhost", BaseUrl) } : null)
+            };
+
+            RestRequest request = new RestRequest(POST_ENDPOINT, Method.Post);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(addRequest), ParameterType.RequestBody);
+
+            SubmitRequest(request);
+        }
+
+        private F5Certificate GetCertificateByName(string name)
+        {
+            logger.MethodEntry(LogLevel.Debug);
+
+            string fileLocation = string.Empty;
+            RestRequest request = new RestRequest($"{GET_ENDPOINT}?$filter=name+eq+'{name}'", Method.Get);
+            JObject json = SubmitRequest(request);
+
+            logger.MethodExit(LogLevel.Debug);
+
+            return JsonConvert.DeserializeObject<F5Certificate>(json.ToString());
         }
 
         private byte[] DownloadCertificateFile(string location)
@@ -122,6 +182,37 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             logger.MethodExit(LogLevel.Debug);
 
             return rtnStore;
+        }
+
+        private void UploadCertificateFile(byte[] certBytes, string fileName)
+        {
+            logger.MethodEntry(LogLevel.Debug);
+
+            using (ScpClient client = new ScpClient(BaseUrl, UserId, Password))
+            {
+                try
+                {
+                    logger.LogDebug($"SCP connection attempt from {BaseUrl}");
+                    client.Connect();
+
+                    using (MemoryStream stream = new MemoryStream(certBytes))
+                    {
+                        client.Upload(stream, $"{UPLOAD_FOLDER}/{fileName}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    string msg = F5BigIQException.FlattenExceptionMessages(ex, "SCP Upload Error: ");
+                    logger.LogError(msg);
+                    throw new F5BigIQException($"Error attempting SCP file transfer from {BaseUrl} .  Please contact your company's system administrator to verify connection and permission settings.", ex);
+                }
+                finally
+                {
+                    client.Disconnect();
+                }
+            }
+
+            logger.MethodExit(LogLevel.Debug);
         }
 
         private string GetAccessToken(string id, string pswd)
@@ -187,15 +278,20 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             return json;
         }
 
-        private RestClient GetRestClient(string baseUrl, string id, string pswd, bool useTokenAuth)
+        private RestClient GetRestClient(string baseUrl, string id, string pswd, bool useTokenAuth, bool ignoreSSLWarning)
         {
             logger.MethodEntry(LogLevel.Debug);
 
             RestClientOptions options = new RestClientOptions(baseUrl);
+
+            if (ignoreSSLWarning)
+                options.RemoteCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+
             if (!useTokenAuth)
                 options.Authenticator = new HttpBasicAuthenticator(id, pswd);
-
+            
             RestClient client = new RestClient(options);
+            
             if (useTokenAuth)
                 client.AddDefaultHeader("X-F5-Auth-Token", GetAccessToken(id, pswd));
 

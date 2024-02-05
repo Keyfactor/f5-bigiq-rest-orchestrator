@@ -127,9 +127,14 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private string GetAccessToken(string id, string pswd)
         {
             logger.MethodEntry(LogLevel.Debug);
-            logger.MethodExit(LogLevel.Debug);
 
-            return "";
+            F5LoginRequest loginRequest = new F5LoginRequest() { UserId = id, Password = pswd, ProviderName = "tmos" };
+            RestRequest request = new RestRequest($"/mgmt/shared/authn/login", Method.Post);
+            request.AddBody(loginRequest);
+            JObject json = SubmitRequest(request);
+
+            logger.MethodExit(LogLevel.Debug);
+            return JsonConvert.DeserializeObject<F5LoginResponse>(json.ToString()).Token.Token;
         }
 
         private JObject SubmitRequest(RestRequest request)

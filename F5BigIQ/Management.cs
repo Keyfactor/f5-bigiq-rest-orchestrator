@@ -13,6 +13,7 @@ using Keyfactor.Orchestrators.Common.Enums;
 
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
@@ -32,12 +33,20 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             {
                 logger.LogDebug($"    {keyValue.Key}: {keyValue.Value}");
             }
-            
+
+            dynamic properties = JsonConvert.DeserializeObject(config.CertificateStoreDetails.Properties);
+            bool ignoreSSLWarning = properties.IgnoreSSLWarning == null || string.IsNullOrEmpty(properties.IgnoreSSLWarning.Value) ? false : bool.Parse(properties.IgnoreSSLWarning.Value);
+            bool useTokenAuthentication = properties.UseTokenAuthentication == null || string.IsNullOrEmpty(properties.UseTokenAuthentication.Value) ? false : bool.Parse(properties.UseTokenAuthentication.Value);
+
             try
             {
+                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.ServerUsername, config.ServerPassword, useTokenAuthentication, ignoreSSLWarning);
+                
                 switch (config.OperationType)
                 {
                     case CertStoreOperationType.Add:
+                        f5Client.AddReplaceCertificate(config.CertificateStoreDetails.StorePath, config.JobCertificate.Alias,
+                            config.JobCertificate.Contents, config.JobCertificate.PrivateKeyPassword, config.Overwrite);
                         break;
                     case CertStoreOperationType.Remove:
                         break;

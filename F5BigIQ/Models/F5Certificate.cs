@@ -24,6 +24,8 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
 
     internal class F5CertificateItem
     {
+        [JsonProperty("id")]
+        internal string Id { get; set; }
         [JsonProperty("name")]
         internal string Alias { get; set; }
         [JsonProperty("fileReference.link")]

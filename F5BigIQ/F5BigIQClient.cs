@@ -24,6 +24,7 @@ using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
 
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using Org.BouncyCastle.Tls;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
@@ -107,7 +108,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             F5Certificate f5Certificate = GetCertificateByName(alias);
 
-            if (f5Certificate.TotalCertificates == 2)
+            if (f5Certificate.TotalCertificates > 1)
                 throw new F5BigIQException($"Two or more certificates already exist with the alias name of {alias}.");
             if (f5Certificate.TotalCertificates == 1 && !overwriteExisting)
                 throw new F5BigIQException($"Certificate with alias name {alias} already exists but Overwrite is set to FALSE.  Please re-schedule this job and select the Overwrite checkbox (set to TRUE) if you with to replace this certificate.");
@@ -131,6 +132,21 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             request.AddParameter("application/json", JsonConvert.SerializeObject(addRequest), ParameterType.RequestBody);
 
             SubmitRequest(request);
+        }
+
+        internal void DeleteCertificate(string alias)
+        {
+            logger.MethodEntry(LogLevel.Debug);
+
+            F5Certificate f5Certificate = GetCertificateByName(alias);
+            if (f5Certificate.TotalCertificates > 1)
+                throw new F5BigIQException($"Two or more certificates already exist with the alias name of {alias}.");
+            if (f5Certificate.TotalCertificates == 0)
+                throw new F5BigIQException($"Alias {alias} not found.  Delete unsuccessful.");
+
+            RestRequest request = new RestRequest(POST_ENDPOINT + $@"/{f5Certificate.CertificateItems[0].Id}", Method.Delete);
+
+            logger.MethodExit(LogLevel.Debug);
         }
 
         private F5Certificate GetCertificateByName(string name)

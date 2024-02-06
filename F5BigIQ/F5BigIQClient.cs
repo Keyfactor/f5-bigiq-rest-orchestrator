@@ -19,10 +19,11 @@ using RestSharp.Authenticators;
 using Renci.SshNet;
 
 using Keyfactor.Logging;
+using Keyfactor.PKI.X509;
 using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
+
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
-using System.Runtime.ConstrainedExecution;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
@@ -82,7 +83,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             return certificates;
         }
 
-        internal X509Certificate2 GetCertificateByLink(string command)
+        internal X509Certificate2Collection GetCertificateByLink(string command)
         {
             logger.MethodEntry(LogLevel.Debug);
 
@@ -91,15 +92,13 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             JObject json = SubmitRequest(request);
             string certificateLocation = JsonConvert.DeserializeObject<F5CertificateLocation>(json.ToString()).CertificateLocation;
-            string certs = DownloadCertificateFile(certificateLocation);
+            string certChain = Convert.ToBase64String(DownloadCertificateFile(certificateLocation));
             
-            CertificateCollectionConverter c = CertificateCollectionConverterFactory.FromPEM(certificateEntryAfterRemovalOfDelim);
-
-            return c.ToX509Certificate2Collection();
+            CertificateCollectionConverter c = CertificateCollectionConverterFactory.FromPEM(certChain);
 
             logger.MethodExit(LogLevel.Debug);
 
-            return new X509Certificate2(DownloadCertificateFile(certificateLocation));
+            return c.ToX509Certificate2Collection();
         }
 
         internal void AddReplaceCertificate(string storePath, string alias, string b64Certificate, string password, bool overwriteExisting)

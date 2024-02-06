@@ -44,15 +44,22 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             {
                 F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.ServerUsername, config.ServerPassword, useTokenAuthentication, ignoreSSLWarning);
                 List<F5CertificateItem> certItems =  f5Client.GetCertificates();
-                foreach(F5CertificateItem certItem in certItems)
+                foreach (F5CertificateItem certItem in certItems)
                 {
-                    X509Certificate2 x509Cert = f5Client.GetCertificateByLink(certItem.Link);
+                    X509Certificate2Collection certChain = f5Client.GetCertificateByLink(certItem.Link);
+                    List<string> certContents = new List<string>();
+                    bool useChainLevel = certChain.Count > 1;
+                    foreach (X509Certificate2 certificate in certChain)
+                    {
+                        certContents.Add(Convert.ToBase64String(certificate.Export(X509ContentType.Cert)));
+                    }
                     inventoryItems.Add(new CurrentInventoryItem()
                     {
                         Alias = certItem.Alias,
-                        Certificates = x509Cert.
+                        Certificates = certContents.ToArray(),
                         ItemStatus = Orchestrators.Common.Enums.OrchestratorInventoryItemStatus.Unknown,
-                        a
+                        UseChainLevel = useChainLevel,
+                        PrivateKeyEntry = true
                     });
                 }
             }

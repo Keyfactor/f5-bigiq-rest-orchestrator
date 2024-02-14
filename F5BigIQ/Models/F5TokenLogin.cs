@@ -13,23 +13,23 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
     internal class F5LoginRequest
     {
         [JsonProperty("username")]
-        public string UserId { get; set; }
+        internal string UserId { get; set; }
         [JsonProperty("password")]
-        public string Password { get; set; }
-        [JsonProperty("loginProviderName")]
-        public string ProviderName { get; set; }
+        internal string Password { get; set; }
+        //[JsonProperty("loginReference")]
+        //internal string ProviderName { get; set; }
     }
 
     internal class F5LoginResponse
     {
         [JsonProperty("token")]
-        public F5LoginToken Token { get; set; }
+        internal F5LoginToken Token { get; set; }
     }
 
     internal class F5LoginToken
     {
         [JsonProperty("token")]
-        public string Token { get; set; }
+        internal string Token { get; set; }
     }
 
 }

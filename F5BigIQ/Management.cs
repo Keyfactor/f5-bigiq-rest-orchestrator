@@ -14,14 +14,17 @@ using Keyfactor.Orchestrators.Common.Enums;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Keyfactor.Orchestrators.Extensions.Interfaces;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
-    public class Management : IManagementJobExtension
+    public class Management : F5JobBase, IManagementJobExtension
     {
-        public string ExtensionName => "";
-
         //Job Entry Point
+        public Management(IPAMSecretResolver resolver)
+        {
+            _resolver = resolver;
+        }
         public JobResult ProcessJob(ManagementJobConfiguration config)
         {
             ILogger logger = LogHandler.GetClassLogger(this.GetType());
@@ -35,12 +38,13 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             }
 
             dynamic properties = JsonConvert.DeserializeObject(config.CertificateStoreDetails.Properties);
+            SetPAMSecrets(config.ServerUsername, config.ServerPassword, logger);
             bool ignoreSSLWarning = properties.IgnoreSSLWarning == null || string.IsNullOrEmpty(properties.IgnoreSSLWarning.Value) ? false : bool.Parse(properties.IgnoreSSLWarning.Value);
-            bool useTokenAuthentication = properties.UseTokenAuthentication == null || string.IsNullOrEmpty(properties.UseTokenAuthentication.Value) ? false : bool.Parse(properties.UseTokenAuthentication.Value);
+            bool useTokenAuthentication = properties.UseTokenAuth == null || string.IsNullOrEmpty(properties.UseTokenAuth.Value) ? false : bool.Parse(properties.UseTokenAuth.Value);
 
             try
             {
-                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.ServerUsername, config.ServerPassword, useTokenAuthentication, ignoreSSLWarning);
+                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, ServerUserName, ServerPassword, useTokenAuthentication, ignoreSSLWarning);
                 
                 switch (config.OperationType)
                 {
@@ -49,6 +53,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                             config.JobCertificate.Contents, config.JobCertificate.PrivateKeyPassword, config.Overwrite);
                         break;
                     case CertStoreOperationType.Remove:
+                        f5Client.DeleteCertificate(config.JobCertificate.Alias);
                         break;
                     default:
                         return new JobResult() { Result = OrchestratorJobStatusJobResult.Failure, JobHistoryId = config.JobHistoryId, FailureMessage = $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}: Unsupported operation: {config.OperationType.ToString()}" };
@@ -57,6 +62,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             catch (Exception ex)
             {
                 logger.LogError($"Exception for {config.Capability}: {F5BigIQException.FlattenExceptionMessages(ex, string.Empty)} for job id {config.JobId}");
+                return new JobResult() { Result = OrchestratorJobStatusJobResult.Failure, JobHistoryId = config.JobHistoryId, FailureMessage = F5BigIQException.FlattenExceptionMessages(ex, $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}:") };
             }
 
             return new JobResult() { Result = Keyfactor.Orchestrators.Common.Enums.OrchestratorJobStatusJobResult.Success, JobHistoryId = config.JobHistoryId };

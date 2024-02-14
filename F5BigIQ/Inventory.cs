@@ -15,12 +15,16 @@ using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
 
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Keyfactor.Orchestrators.Extensions.Interfaces;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
-    public class Inventory : IInventoryJobExtension
+    public class Inventory : F5JobBase, IInventoryJobExtension
     {
-        public string ExtensionName => "";
+        public Inventory(IPAMSecretResolver resolver)
+        {
+            _resolver = resolver;
+        }
 
         public JobResult ProcessJob(InventoryJobConfiguration config, SubmitInventoryUpdate submitInventory)
         {
@@ -35,18 +39,19 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             }
 
             dynamic properties = JsonConvert.DeserializeObject(config.CertificateStoreDetails.Properties);
+            SetPAMSecrets(config.ServerUsername, config.ServerPassword, logger);
             bool ignoreSSLWarning = properties.IgnoreSSLWarning == null || string.IsNullOrEmpty(properties.IgnoreSSLWarning.Value) ? false : bool.Parse(properties.IgnoreSSLWarning.Value);
-            bool useTokenAuthentication = properties.UseTokenAuthentication == null || string.IsNullOrEmpty(properties.UseTokenAuthentication.Value) ? false : bool.Parse(properties.UseTokenAuthentication.Value);
+            bool useTokenAuthentication = properties.UseTokenAuth == null || string.IsNullOrEmpty(properties.UseTokenAuth.Value) ? false : bool.Parse(properties.UseTokenAuth.Value);
 
             List<CurrentInventoryItem> inventoryItems = new List<CurrentInventoryItem>();
 
             try
             {
-                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.ServerUsername, config.ServerPassword, useTokenAuthentication, ignoreSSLWarning);
+                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, ServerUserName, ServerPassword, useTokenAuthentication, ignoreSSLWarning);
                 List<F5CertificateItem> certItems =  f5Client.GetCertificates();
                 foreach (F5CertificateItem certItem in certItems)
                 {
-                    X509Certificate2Collection certChain = f5Client.GetCertificateByLink(certItem.Link);
+                    X509Certificate2Collection certChain = f5Client.GetCertificateByLink(certItem.FileReference.Link);
                     List<string> certContents = new List<string>();
                     bool useChainLevel = certChain.Count > 1;
                     foreach (X509Certificate2 certificate in certChain)
@@ -66,6 +71,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             catch (Exception ex)
             {
                 logger.LogError($"Exception for {config.Capability}: {F5BigIQException.FlattenExceptionMessages(ex, string.Empty)} for job id {config.JobId}");
+                return new JobResult() { Result = Keyfactor.Orchestrators.Common.Enums.OrchestratorJobStatusJobResult.Failure, JobHistoryId = config.JobHistoryId, FailureMessage = F5BigIQException.FlattenExceptionMessages(ex, $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}:") };
             }
 
             try

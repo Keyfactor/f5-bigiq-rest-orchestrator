@@ -25,7 +25,9 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
         [JsonProperty("itemPartition")]
         internal string Partition { get; set; }
         [JsonProperty("certReference")]
-        internal CertificateReference Reference { get; set; }
+        internal CertificateReference CertReference { get; set; }
+        [JsonProperty("keyReference")]
+        internal CertificateReference KeyReference { get; set; }
     }
 
     internal class CertificateReference

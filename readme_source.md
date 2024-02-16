@@ -50,10 +50,20 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 **Custom Fields Tab**
 
 - **Ignore SSL Warning** - optional - If you use a self signed certificate for the F5 Big IQ portal, you will need add this Custom Field and set the value to True on the managed certificate store.
-  - **Name**=IgnoreSSLWarning, **Display Name**=Ignore SSL Warning, **Type**=Bool, **Default Value**={client preference}, **Depends on**=unchecked, **Required**=unchecked
+  - **Name**=IgnoreSSLWarning
+  - **Display Name**=Ignore SSL Warning
+  - **Type**=Bool
+  - **Default Value**={client preference}
+  - **Depends on**=unchecked
+  - **Required**=unchecked
 
 - **Use Token Authentication** - optional - If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls that the integration uses, you will need to add this Custom Field and set the value to True on the managed certificate store.  If this exists and is set to True for the store, the store userid/password credentials you set for the certificate store will be used once to receive a token.  This token is then used for all remaining API calls for the duration of the job.  If this option does not exist or is set to False, the userid/password credentials you set on the certificate store will be used for each API call.
-  - **Name**=UseTokenAuth, **Display Name**=Use Token Authentication, **Type**=Bool, **Default Value**={client preference}, **Depends on**=unchecked, **Required**=unchecked
+  - **Name**=UseTokenAuth
+  - **Display Name**=Use Token Authentication
+  - **Type**=Bool
+  - **Default Value**={client preference}
+  - **Depends on**=unchecked
+  - **Required**=unchecked
 
   Please note, after saving the store type, going back into this screen will show three additional Custom Fields: Server Username, Server Password, and Use SSL.  These are added internally by Keyfactor Command and should not be modified.
 

@@ -1,5 +1,5 @@
 |Name|Description|
 |----|-----------|
-|ServerUsername|The user id that will be used to authenticate into the server hosting the store|
-|ServerPassword|The password that will be used to authenticate into the server hosting the store|
+|ServerUsername|The user id that will be used to authenticate to the F5 Biq API endpoints|
+|ServerPassword|The password that will be used to authenticate to the F5 Biq API endpoints|
   

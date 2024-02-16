@@ -16,8 +16,8 @@ The version number of a the F5 Big IQ Orchestrator Extension can be verified by 
 ## F5 Big IQ Prerequisites
 
 When creating a Keyfactor Command Certificate Store, you will be asked to enter server credentials.  These credentials will serve two purposes:
-1. They will be used to authenticate to F5 Big IQ when making API requests.  Please make sure these credentials have Admin authority on F5 Big IQ.
-2. When Inventorying and Add/Replacing certificates it will be necessary for certificate files to be transferred to and from the F5 device.  The F5 Big IQ Orchestrator Extension uses SCP (Secure Copy Protocol) to perform this.  Please make sure your F5 Big IQ device is set up to allow SCP to transfer files *to* /var/config/rest/downloads (a reserved F5 Big IQ folder used for file transfers) and *from* /var/config/rest/fileobject/{all subfolders} (the certificate file location path).  You may need go into the /etc/ssh/sshd_config file on your F5 Big IQ device and set PasswordAuthentication from “No” to “Yes” for SCP to work.  It is also possible other configuration may be necessary in your environment to enable this feature.
+1. They will be used to authenticate to the F5 Big IQ instance when accessing API endpoints.  Please make sure these credentials have Admin authority on F5 Big IQ.
+2. When Inventorying and Adding/Replacing certificates it will be necessary for certificate files to be transferred to and from the F5 device.  The F5 Big IQ Orchestrator Extension uses SCP (Secure Copy Protocol) to perform these functions.  Please make sure your F5 Big IQ device is set up to allow SCP to transfer files *to* /var/config/rest/downloads (a reserved F5 Big IQ folder used for file transfers) and *from* /var/config/rest/fileobject (the certificate file location path) and all subfolders.  You may need go into the /etc/ssh/sshd_config file on your F5 Big IQ device and set PasswordAuthentication from “No” to “Yes” for SCP to work.  Other configuration tasks may be necessary in your environment to enable this feature.
 
 
 ## F5 Big IQ Orchestrator Extension Installation
@@ -37,7 +37,7 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 - **Name** – Required. The descriptive display name of the new Certificate Store Type.  Suggested => F5 Big IQ
 - **Short Name** – Required. This value ***must be*** F5-BigIQ.
 - **Custom Capability** - Leave unchecked
-- **Supported Job Types** – Select Inventory Add, and Remove.
+- **Supported Job Types** – Select Inventory, Add, and Remove.
 - **General Settings** - Select Needs Server.  Select Blueprint Allowed if you plan to use blueprinting.  Leave Uses PowerShell unchecked.
 - **Password Settings** - Leave both options unchecked
 
@@ -49,11 +49,11 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 
 **Custom Fields Tab**
 
-**Ignore SSL Warning** - optional - If you use a self signed certificate for the F5 Big IQ portal, you will need add this Custom Field and set the value to True on the managed certificate store.  Name=IgnoreSSLWarning, Display Name=Ignore SSL Warning, Type=Bool, Default Value={client preference}, Depends on=unchecked, Required=unchecked
+- **Ignore SSL Warning** - optional - If you use a self signed certificate for the F5 Big IQ portal, you will need add this Custom Field and set the value to True on the managed certificate store.  Name=IgnoreSSLWarning, Display Name=Ignore SSL Warning, Type=Bool, Default Value={client preference}, Depends on=unchecked, Required=unchecked
 
-**Use Token Authentication** - optional - If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls that the integration uses, you will need to add this Custom Field and set the value to True on the managed certificate store.  If this exists and is set to True for the store, the store userid/password credentials you set for the certificate store will be used once to receive a token.  This token is then used for all remaining API calls for the duration of the job.  If this option does not exist or is set to False, the userid/password credentials you set on the certificate store will be used for each API call.  Name=UseTokenAuth, Display Name=Use Token Authentication, Type=Bool, Default Value={client preference}, Depends on=unchecked, Required=unchecked
+- **Use Token Authentication** - optional - If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls that the integration uses, you will need to add this Custom Field and set the value to True on the managed certificate store.  If this exists and is set to True for the store, the store userid/password credentials you set for the certificate store will be used once to receive a token.  This token is then used for all remaining API calls for the duration of the job.  If this option does not exist or is set to False, the userid/password credentials you set on the certificate store will be used for each API call.  Name=UseTokenAuth, Display Name=Use Token Authentication, Type=Bool, Default Value={client preference}, Depends on=unchecked, Required=unchecked
 
-Please note, after saving the store type, going back into this screen will show three additional Custom Fields: Server Username, Server Password, and Use SSL.  These are added internally by Keyfactor Command and should not be modified.
+  Please note, after saving the store type, going back into this screen will show three additional Custom Fields: Server Username, Server Password, and Use SSL.  These are added internally by Keyfactor Command and should not be modified.
 
 **Entry Parameters**
 

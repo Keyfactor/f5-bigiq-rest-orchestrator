@@ -167,7 +167,7 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 
   Please note, after saving the store type, going back into this screen will show three additional Custom Fields: Server Username, Server Password, and Use SSL.  These are added internally by Keyfactor Command and should not be modified.
 
-**Entry Parameters**
+**Entry Parameters Tab**
 
 No Entry Parameters should be added.
 

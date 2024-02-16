@@ -113,12 +113,28 @@ The F5 Big IQ Orchestrator supports the following capabilities for SSL certifica
 The version number of a the F5 Big IQ Orchestrator can be verified by right clicking on the F5BigIQ.dll file, selecting Properties, and then clicking on the Details tab.
 
 
-## F5 Orchestrator Configuration
+## F5 Big IQ Prerequisites
+
+When creating a Keyfactor Command Certificate Store, you will be asked to enter server credentials.  These credentials will serve two purposes:
+1. They will be used to authenticate to F5 Big IQ when making API requests.  Please make sure these credentials have Admin authority on F5 Big IQ.
+2. When Inventorying and Add/Replacing certificates it will be necessary for certificate files to be transferred to and from the F5 device.  The F5 Big IQ Orchestrator Extension uses SCP (Secure Copy Protocol) to perform this.  Please make sure your F5 Big IQ device is set up to allow SCP to transfer files *to* /var/config/rest/downloads (a reserved F5 Big IQ folder used for file transfers) and *from* /var/config/rest/fileobject/{all subfolders} (the certificate file location path).  You may need go into the /etc/ssh/sshd_config file on your F5 Big IQ device and set PasswordAuthentication from “No” to “Yes” for SCP to work.  It is also possible other configuration may be necessary in your environment to enable this feature.
+
+
+## F5 Big IQ Orchestrator Installation
+
+1. Stop the Keyfactor Universal Orchestrator Service.
+2. In the Keyfactor Orchestrator installation folder (by convention usually C:\Program Files\Keyfactor\Keyfactor Orchestrator), find the "extensions" folder. Underneath that, create a new folder named F5BigIQ or another name of your choosing.
+3. Download the latest version of the F5 BigIQ Orchestrator from [GitHub](https://github.com/Keyfactor/f5-bigiq-rest-orchestrator).
+4. Copy the contents of the download installation zip file into the folder created in step 2.
+5. Start the Keyfactor Universal Orchestrator Service.
+
+
+## F5 Big IQ Orchestrator Configuration
 
 1. In Keyfactor Command, create a new certificate store type by navigating to Settings (the "gear" icon in the top right) => Certificate Store Types, and clicking ADD.  Then enter the following information:
 
 **Basic Tab**
-- **Name** – Required. The descriptive display name of the new Certificate Store Type.
+- **Name** – Required. The descriptive display name of the new Certificate Store Type.  Suggested => F5 Big IQ
 - **Short Name** – Required. This value ***must be*** F5-BigIQ.
 - **Custom Capability** - Leave unchecked
 - **Supported Job Types** – Select Inventory Add, and Remove.
@@ -137,6 +153,40 @@ The version number of a the F5 Big IQ Orchestrator can be verified by right clic
 
 **Use Token Authentication** - optional - If you prefer to use F5's Token Authentication to authenticate F5 API calls that the integration uses, you will need to add this Custom Field and set the value to True on the managed certificate store.  If this exists and is set to True for the store, the store userid/password credentials you set for the certificate store will be used once to receive a token.  This token is then used for all remaining API calls for the duration of the job.  If this option does not exist or is set to False, the userid/password credentials you set on the certificate store will be used for each API call.  Name=UseTokenAuth, Display Name=Use Token Authentication, Type=Bool, Default Value={client preference}, Depends on=unchecked, Required=unchecked
 
-Please note, after saving the store type, going back into this screen will show three Custom Fields, Server Username, Server Password, and Use SSL.  These are added internally by Keyfactor Command and do/should not be modified.
+Please note, after saving the store type, going back into this screen will show three additional Custom Fields: Server Username, Server Password, and Use SSL.  These are added internally by Keyfactor Command and should not be modified.
 
+**Entry Parameters**
+
+No Entry Parameters should be added.
+
+
+2. Create an F5 Big IQ Certificate Store
+
+Navigate to Certificate Locations =\> Certificate Stores within Keyfactor Command to add the store. Below are the values that should be entered:
+
+- **Category** – Required.  Select the Name you entered when creating the Certificate Store Type.  Suggested value was F5 Big IQ.
+
+- **Container** – Optional.  Select a container if utilized.
+
+- **Client Machine & Credentials** – Required.  The full URL of the F5 Big IQ device portal.  
+  
+- **Store Path** – Required.  Enter the name of the partition on the F5 Big IQ device you wish to manage.  This value is case sensitive, so if the partition name is "Common", it must be entered as "Common" and not "common".
+
+- **Orchestrator** – Required.  Select the orchestrator you wish to use to manage this store
+
+- **Ignore SSL Warning** - Optional.  Select this if you wish to ignore SSL warnings from F5 that occur during API calls when the site does not have a trusted certificate with the proper SAN bound to it.  If you chose Custom Field when creating the Certificate Store Type, the default value of False will be assumed and SSL warnings will cause errors during orchestrator extension jobs.
+
+- **Use Token Authentication** - Optional.  Select this if you wish to use F5's token authentiation instead of basic authentication for all API requests.  If you chose not to add this optional Custom Field when creating the Certificate Store Type, the default value of False will be assumed and basic authentication will be used for all API requests for all jobs.  Setting this value to True will enable an initial basic authenticated request to acquire an authentication token, which will then be used for all subsequent API requests.
+
+- **Server Username/Password** - Required.  The credentials used to log into the F5 Big IQ device to perform API calls.  These values for server login can be any of:
+  
+  - UserId/Password
+  If you
+  - PAM provider information to pass the UserId/Password or UserId/SSH private key credentials
+
+Please make sure these credentials have Admin rights on the F5 Big IQ device and can perform SCP functions as described in the F5 Prerequisites section above.
+
+- **Use SSL** - N/A.  This value is not referenced in the F5 Big IQ Orchestrator Extension.  Whether a TLS connection is utuilized when consuming F5 Big IQ endpoints is driven by the URL you enter for Client Machine and if it is entered as http:// or https://.
+
+- **Inventory Schedule** – Set a schedule for running Inventory jobs or none, if you choose not to schedule Inventory at this time.
 

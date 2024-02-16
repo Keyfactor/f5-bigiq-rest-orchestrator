@@ -131,7 +131,7 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 
 ## F5 Big IQ Orchestrator Extension Configuration
 
-# 1\. In Keyfactor Command, create a new certificate store type by navigating to Settings (the "gear" icon in the top right) => Certificate Store Types, and clicking ADD.  Then enter the following information:
+### 1\. In Keyfactor Command, create a new certificate store type by navigating to Settings (the "gear" icon in the top right) => Certificate Store Types, and clicking ADD.  Then enter the following information:
 
 **Basic Tab**
 - **Name** – Required. The descriptive display name of the new Certificate Store Type.  Suggested => F5 Big IQ
@@ -172,7 +172,7 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 No Entry Parameters should be added.
 
 
-# 2\. Create an F5 Big IQ Certificate Store
+### 2\. Create an F5 Big IQ Certificate Store
 
 Navigate to Certificate Locations =\> Certificate Stores within Keyfactor Command to add the store. Below are the values that should be entered:
 

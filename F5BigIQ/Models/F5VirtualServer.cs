@@ -18,10 +18,20 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
         internal int TotalPages { get; set; }
         [JsonProperty("totalItems")]
         internal int TotalVirtualServers { get; set; }
+        [JsonProperty("items")]
+        internal List<F5VirtualServerItem> VirtualServerItems { get; set; }
+    }
+
+    internal class F5VirtualServerItem
+    {
+        [JsonProperty("name")]
+        internal string Name { get; set; }
+        [JsonProperty("selfLink")]
+        internal string ItemLink { get; set; }
         [JsonProperty("deviceReference")]
-        internal List<F5VirtualServerDeviceReference> VirtualServerDeviceReference { get; set; }
+        internal F5VirtualServerDeviceReference VirtualServerDeviceReference { get; set; }
         [JsonProperty("profilesCollectionReference")]
-        internal List<F5VirtualServerProfilesCollectionReference> VirtualServerProfilesCollectionReference { get; set; }
+        internal F5VirtualServerProfilesCollectionReference VirtualServerProfilesCollectionReference { get; set; }
     }
 
     internal class F5VirtualServerDeviceReference

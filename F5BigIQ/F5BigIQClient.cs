@@ -29,6 +29,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
     internal class F5BigIQClient
     {
+        private const string LOCAL_URL_VALUE = @"https://localhost";
         private const string GET_ENDPOINT = "/mgmt/cm/adc-core/working-config/sys/file/ssl-cert";
         private const string GET_KEY_ENDPOINT = "/mgmt/cm/adc-core/working-config/sys/file/ssl-key";
         private const string GET_PROFILE_ENDPOINT = "/mgmt/cm/adc-core/working-config/ltm/profile/client-ssl";
@@ -73,7 +74,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             do
             {
-                string RESOURCE = $"{GET_ENDPOINT}?$top={ITEMS_PER_PAGE.ToString()}&$skip={((currentPageIndex-1)*ITEMS_PER_PAGE).ToString()}";
+                string RESOURCE = $"{GET_ENDPOINT}?$top={ITEMS_PER_PAGE.ToString()}&$skip={((currentPageIndex - 1) * ITEMS_PER_PAGE).ToString()}";
                 RestRequest request = new RestRequest(RESOURCE, Method.Get);
 
                 JObject json = SubmitRequest(request);
@@ -100,12 +101,12 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             logger.MethodEntry(LogLevel.Debug);
 
             string fileLocation = string.Empty;
-            RestRequest request = new RestRequest(command.Replace(@"https://localhost", BaseUrl), Method.Get);
+            RestRequest request = new RestRequest(command.Replace(LOCAL_URL_VALUE, BaseUrl), Method.Get);
 
             JObject json = SubmitRequest(request);
             string certificateLocation = JsonConvert.DeserializeObject<F5CertificateLocation>(json.ToString()).CertificateLocation;
             string certChain = System.Text.ASCIIEncoding.ASCII.GetString(DownloadCertificateFile(certificateLocation));
-            
+
             CertificateCollectionConverter c = CertificateCollectionConverterFactory.FromPEM(certChain);
 
             logger.MethodExit(LogLevel.Debug);
@@ -139,8 +140,8 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 Partition = storePath,
                 Password = password,
                 Command = f5Certificate.TotalCertificates == 1 ? REPLACE_COMMAND : ADD_COMMAND,
-                CertReference = (f5Certificate.TotalCertificates == 1 ? new CertificateReference() { Link = f5Certificate.CertificateItems[0].Link.Replace(@"https://localhost", BaseUrl) } : null),
-                KeyReference = (f5Certificate.TotalCertificates == 1 ? new CertificateReference() { Link = f5Key.CertificateItems[0].Link.Replace(@"https://localhost", BaseUrl) } : null)
+                CertReference = (f5Certificate.TotalCertificates == 1 ? new CertificateReference() { Link = f5Certificate.CertificateItems[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null),
+                KeyReference = (f5Certificate.TotalCertificates == 1 ? new CertificateReference() { Link = f5Key.CertificateItems[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null)
             };
 
             RestRequest request = new RestRequest(POST_ENDPOINT, Method.Post);
@@ -202,32 +203,53 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             return profileNames;
         }
 
-        internal Dictionary<string,string> GetVirtualServerDeploymentsForProfiles(List<string> profileNames)
+        internal List<F5Deployment> GetVirtualServerDeploymentsForVirtualServers(List<string> virtualServerNames)
         {
             logger.MethodEntry(LogLevel.Debug);
-            Dictionary<string, string> profileNames = new List<string>();
+            List<F5Deployment> deployments = new List<F5Deployment>;
 
             int currentPageIndex = 1;
 
             do
             {
-                string RESOURCE = $"{GET_PROFILE_ENDPOINT}?$top={ITEMS_PER_PAGE.ToString()}&$skip={((currentPageIndex - 1) * ITEMS_PER_PAGE).ToString()}";
+                string RESOURCE = $"{GET_VIRTUAL_SERVER_ENDPOINT}?$top={ITEMS_PER_PAGE.ToString()}&$skip={((currentPageIndex - 1) * ITEMS_PER_PAGE).ToString()}";
                 RestRequest request = new RestRequest(RESOURCE, Method.Get);
 
                 JObject json = SubmitRequest(request);
-                F5Profile pageOfProfiles = JsonConvert.DeserializeObject<F5Profile>(json.ToString());
+                F5VirtualServer pageOfVirtualServers = JsonConvert.DeserializeObject<F5VirtualServer>(json.ToString());
 
-                profileNames.AddRange(pageOfProfiles.ProfileItems.Where(o => o.CertificateKeyChains.Any(p => p.CertificateReference.Name == alias)).Select(q => q.Name).ToList());
+                foreach (F5VirtualServerItem virtualServerItem in pageOfVirtualServers.VirtualServerItems)
+                {
+                    RestRequest request2 = new RestRequest(virtualServerItem.ItemLink.Replace(LOCAL_URL_VALUE, BaseUrl), Method.Get);
+                    JObject json2 = SubmitRequest(request2);
+                    F5VirtualServerProfile virtualServerProfiles = JsonConvert.DeserializeObject<F5VirtualServerProfile>(json.ToString());
 
-                if (pageOfProfiles.TotalPages == pageOfProfiles.PageIndex)
+                    if (virtualServerProfiles.VirtualServerProfileItems.Any(p => virtualServerNames.Contains(p.VirtualServerProfileClientSSLReference.Name)))
+                    {
+                        deployments.Add(new F5Deployment()
+                        {
+                            Name = virtualServerItem.Name + Guid.NewGuid().ToString(),
+                            DeviceReferences = new List<F5Reference>() { new F5Reference() { ItemLink = virtualServerItem.VirtualServerDeviceReference.ItemLink } },
+                            ObjectsToDeployReferences = new List<F5Reference>() { new F5Reference() { ItemLink = virtualServerItem.ItemLink } }
+                        });
+                        break;
+                    }
+                }
+
+                if (pageOfVirtualServers.TotalPages == pageOfVirtualServers.PageIndex)
                     break;
 
-                currentPageIndex = pageOfProfiles.PageIndex + 1;
+                currentPageIndex = pageOfVirtualServers.PageIndex + 1;
             } while (1 == 1);
 
             logger.MethodExit(LogLevel.Debug);
 
-            return profileNames;
+            return deployments;
+        }
+
+        internal void ScheduleBigIPDeployment(F5Deployment deployment)
+        {
+
         }
 
         private F5Certificate GetCertificateByName(string name)
@@ -298,7 +320,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private void UploadCertificateFile(byte[] certBytes, string fileName)
         {
             logger.MethodEntry(LogLevel.Debug);
-            
+
             string serverLocation = BaseUrl.Replace("https://", String.Empty);
 
             ConnectionInfo connectionInfo = new ConnectionInfo(serverLocation, UserId, new List<AuthenticationMethod>() { new PasswordAuthenticationMethod(UserId, Password) }.ToArray());

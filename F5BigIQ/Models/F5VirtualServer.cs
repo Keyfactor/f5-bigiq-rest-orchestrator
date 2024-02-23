@@ -10,35 +10,29 @@ using Newtonsoft.Json;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
 {
-    internal class F5Profile
+    internal class F5VirtualServer
     {
         [JsonProperty("pageIndex")]
         internal int PageIndex { get; set; }
         [JsonProperty("totalPages")]
         internal int TotalPages { get; set; }
         [JsonProperty("totalItems")]
-        internal int TotalProfiles { get; set; }
-        [JsonProperty("items")]
-        internal List<F5ProfileItem> ProfileItems { get; set; }
+        internal int TotalVirtualServers { get; set; }
+        [JsonProperty("deviceReference")]
+        internal List<F5VirtualServerDeviceReference> VirtualServerDeviceReference { get; set; }
+        [JsonProperty("profilesCollectionReference")]
+        internal List<F5VirtualServerProfilesCollectionReference> VirtualServerProfilesCollectionReference { get; set; }
     }
 
-    internal class F5ProfileItem
+    internal class F5VirtualServerDeviceReference
     { 
-        [JsonProperty("name")]
-        internal string Name { get; set; }
-        [JsonProperty("certKeyChain")]
-        internal List<F5ProfileCertificateKeyChain> CertificateKeyChains { get; set; }
+        [JsonProperty("link")]
+        internal string ItemLink { get; set; }
     }
 
-    internal class F5ProfileCertificateKeyChain
+    internal class F5VirtualServerProfilesCollectionReference
     {
-        [JsonProperty("certReference")]
-        internal F5ProfileCertificateReference CertificateReference { get; set; }
-    }
-
-    internal class F5ProfileCertificateReference
-    {
-        [JsonProperty("name")]
-        internal string Name { get; set; }
+        [JsonProperty("link")]
+        internal string ItemLink { get; set; }
     }
 }

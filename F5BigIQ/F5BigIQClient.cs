@@ -6,6 +6,7 @@
 // and limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
@@ -31,6 +32,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private const string GET_ENDPOINT = "/mgmt/cm/adc-core/working-config/sys/file/ssl-cert";
         private const string GET_KEY_ENDPOINT = "/mgmt/cm/adc-core/working-config/sys/file/ssl-key";
         private const string GET_PROFILE_ENDPOINT = "/mgmt/cm/adc-core/working-config/ltm/profile/client-ssl";
+        private const string GET_VIRTUAL_SERVER_ENDPOINT = "/mgmt/cm/adc-core/working-config/ltm/virtual";
         private const string POST_ENDPOINT = "/mgmt/cm/adc-core/tasks/certificate-management";
         private const string UPLOAD_FOLDER = "/var/config/rest/downloads";
         private const int ITEMS_PER_PAGE = 50;
@@ -179,7 +181,33 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             int currentPageIndex = 1;
 
-            List<F5Profile> profiles = new List<F5Profile>();
+            do
+            {
+                string RESOURCE = $"{GET_PROFILE_ENDPOINT}?$top={ITEMS_PER_PAGE.ToString()}&$skip={((currentPageIndex - 1) * ITEMS_PER_PAGE).ToString()}";
+                RestRequest request = new RestRequest(RESOURCE, Method.Get);
+
+                JObject json = SubmitRequest(request);
+                F5Profile pageOfProfiles = JsonConvert.DeserializeObject<F5Profile>(json.ToString());
+
+                profileNames.AddRange(pageOfProfiles.ProfileItems.Where(o => o.CertificateKeyChains.Any(p => p.CertificateReference.Name == alias)).Select(q => q.Name).ToList());
+
+                if (pageOfProfiles.TotalPages == pageOfProfiles.PageIndex)
+                    break;
+
+                currentPageIndex = pageOfProfiles.PageIndex + 1;
+            } while (1 == 1);
+
+            logger.MethodExit(LogLevel.Debug);
+
+            return profileNames;
+        }
+
+        internal Dictionary<string,string> GetVirtualServerDeploymentsForProfiles(List<string> profileNames)
+        {
+            logger.MethodEntry(LogLevel.Debug);
+            Dictionary<string, string> profileNames = new List<string>();
+
+            int currentPageIndex = 1;
 
             do
             {
@@ -187,22 +215,19 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 RestRequest request = new RestRequest(RESOURCE, Method.Get);
 
                 JObject json = SubmitRequest(request);
-                F5Profile pageOfCerts = JsonConvert.DeserializeObject<F5Profile>(json.ToString());
-                if (pageOfCerts.CertificateKeyChains.Count == 0)
+                F5Profile pageOfProfiles = JsonConvert.DeserializeObject<F5Profile>(json.ToString());
+
+                profileNames.AddRange(pageOfProfiles.ProfileItems.Where(o => o.CertificateKeyChains.Any(p => p.CertificateReference.Name == alias)).Select(q => q.Name).ToList());
+
+                if (pageOfProfiles.TotalPages == pageOfProfiles.PageIndex)
                     break;
 
-                certificates.AddRange(pageOfCerts.CertificateItems);
-
-                if (pageOfCerts.TotalPages == pageOfCerts.PageIndex)
-                    break;
-
-                currentPageIndex = pageOfCerts.PageIndex + 1;
+                currentPageIndex = pageOfProfiles.PageIndex + 1;
             } while (1 == 1);
-            certificates.ForEach(p => p.Alias = p.Alias.Replace(ALIAS_SUFFIX, string.Empty));
 
             logger.MethodExit(LogLevel.Debug);
 
-            return certificates;
+            return profileNames;
         }
 
         private F5Certificate GetCertificateByName(string name)

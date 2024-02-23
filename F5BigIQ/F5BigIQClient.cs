@@ -35,6 +35,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private const string GET_PROFILE_ENDPOINT = "/mgmt/cm/adc-core/working-config/ltm/profile/client-ssl";
         private const string GET_VIRTUAL_SERVER_ENDPOINT = "/mgmt/cm/adc-core/working-config/ltm/virtual";
         private const string POST_ENDPOINT = "/mgmt/cm/adc-core/tasks/certificate-management";
+        private const string POST_DEPLOY_ENDPOINT = "/mgmt/cm/adc-core/tasks/deploy-configuration";
         private const string UPLOAD_FOLDER = "/var/config/rest/downloads";
         private const int ITEMS_PER_PAGE = 50;
         private const string ADD_COMMAND = "ADD_PKCS12";
@@ -206,7 +207,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         internal List<F5Deployment> GetVirtualServerDeploymentsForVirtualServers(List<string> virtualServerNames)
         {
             logger.MethodEntry(LogLevel.Debug);
-            List<F5Deployment> deployments = new List<F5Deployment>;
+            List<F5Deployment> deployments = new List<F5Deployment>();
 
             int currentPageIndex = 1;
 
@@ -247,9 +248,12 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             return deployments;
         }
 
-        internal void ScheduleBigIPDeployment(F5Deployment deployment)
+        internal void ScheduleBigIPDeployment(F5Deployment deploymentRequest)
         {
+            RestRequest request = new RestRequest(POST_DEPLOY_ENDPOINT, Method.Post);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(deploymentRequest), ParameterType.RequestBody);
 
+            SubmitRequest(request);
         }
 
         private F5Certificate GetCertificateByName(string name)

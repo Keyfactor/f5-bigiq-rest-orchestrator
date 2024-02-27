@@ -1,0 +1,14 @@
+{
+  "extensions": {
+    "Keyfactor.Orchestrators.Extensions.IOrchestratorJobExtension": {
+      "CertStores.F5-BigIQ.Inventory": {
+        "assemblypath": "F5BigIQ.dll",
+        "TypeFullName": "Keyfactor.Extensions.Orchestrator.F5BigIQ.Inventory"
+      },
+      "CertStores.F5-BigIQ.Management": {
+        "assemblypath": "F5BigIQ.dll",
+        "TypeFullName": "Keyfactor.Extensions.Orchestrator.F5BigIQ.Management"
+      }
+    }
+  }
+}

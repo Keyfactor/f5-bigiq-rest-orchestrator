@@ -38,7 +38,7 @@
           "SupportedOperations": {
             "Add": true,
             "Create": false,
-            "Discovery": true,
+            "Discovery": false,
             "Enrollment": false,
             "Remove": true
           },

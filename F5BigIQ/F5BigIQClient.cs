@@ -234,7 +234,6 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                             DeviceReferences = new List<F5Reference>() { new F5Reference() { ItemLink = virtualServerItem.VirtualServerDeviceReference.ItemLink } },
                             ObjectsToDeployReferences = new List<F5Reference>() { new F5Reference() { ItemLink = virtualServerItem.ItemLink } }
                         });
-                        break;
                     }
                 }
 

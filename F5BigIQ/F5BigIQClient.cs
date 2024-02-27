@@ -180,6 +180,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         {
             logger.MethodEntry(LogLevel.Debug);
             List<string> profileNames = new List<string>();
+            string aliasWithSuffix = alias + ALIAS_SUFFIX;
 
             int currentPageIndex = 1;
 
@@ -191,7 +192,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 JObject json = SubmitRequest(request);
                 F5Profile pageOfProfiles = JsonConvert.DeserializeObject<F5Profile>(json.ToString());
 
-                profileNames.AddRange(pageOfProfiles.ProfileItems.Where(o => o.CertificateKeyChains.Any(p => p.CertificateReference.Name == alias)).Select(q => q.Name).ToList());
+                profileNames.AddRange(pageOfProfiles.ProfileItems.Where(o => o.CertificateKeyChains != null && o.CertificateKeyChains.Any(p => p.CertificateReference.Name == aliasWithSuffix)).Select(q => q.Name).ToList());
 
                 if (pageOfProfiles.TotalPages == pageOfProfiles.PageIndex)
                     break;
@@ -221,15 +222,15 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
                 foreach (F5VirtualServerItem virtualServerItem in pageOfVirtualServers.VirtualServerItems)
                 {
-                    RestRequest request2 = new RestRequest(virtualServerItem.ItemLink.Replace(LOCAL_URL_VALUE, BaseUrl), Method.Get);
+                    RestRequest request2 = new RestRequest(virtualServerItem.VirtualServerProfilesCollectionReference.ItemLink.Replace(LOCAL_URL_VALUE, BaseUrl), Method.Get);
                     JObject json2 = SubmitRequest(request2);
-                    F5VirtualServerProfile virtualServerProfiles = JsonConvert.DeserializeObject<F5VirtualServerProfile>(json.ToString());
+                    F5VirtualServerProfile virtualServerProfiles = JsonConvert.DeserializeObject<F5VirtualServerProfile>(json2.ToString(), new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Include });
 
-                    if (virtualServerProfiles.VirtualServerProfileItems.Any(p => virtualServerNames.Contains(p.VirtualServerProfileClientSSLReference.Name)))
+                    if (virtualServerProfiles.VirtualServerProfileItems.Any(p => p.VirtualServerProfileClientSSLReference != null && virtualServerNames.Contains(p.VirtualServerProfileClientSSLReference.Name)))
                     {
                         deployments.Add(new F5Deployment()
                         {
-                            Name = virtualServerItem.Name + Guid.NewGuid().ToString(),
+                            Name = virtualServerItem.Name + "-" +  Guid.NewGuid().ToString(),
                             DeviceReferences = new List<F5Reference>() { new F5Reference() { ItemLink = virtualServerItem.VirtualServerDeviceReference.ItemLink } },
                             ObjectsToDeployReferences = new List<F5Reference>() { new F5Reference() { ItemLink = virtualServerItem.ItemLink } }
                         });

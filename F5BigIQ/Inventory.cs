@@ -51,6 +51,8 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 List<F5CertificateItem> certItems =  f5Client.GetCertificates();
                 foreach (F5CertificateItem certItem in certItems)
                 {
+                    if (certItem.FileReference == null)
+                        continue;
                     X509Certificate2Collection certChain = f5Client.GetCertificateByLink(certItem.FileReference.Link);
                     List<string> certContents = new List<string>();
                     bool useChainLevel = certChain.Count > 1;

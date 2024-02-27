@@ -44,36 +44,20 @@
           },
           "Properties": [
             {
-              "Name": "linkToIssuer",
-              "DisplayName": "Link To Issuer",
+              "Name": "IgnoreSSLWarning",
+              "DisplayName": "Ignore SSL Warning",
               "Type": "Bool",
               "DependsOn": "",
               "DefaultValue": "false",
               "Required": false
             },
             {
-              "Name": "ServerUsername",
-              "DisplayName": "Server Username",
-              "Type": "Secret",
-              "DependsOn": "",
-              "DefaultValue": null,
-              "Required": false
-            },
-            {
-              "Name": "ServerPassword",
-              "DisplayName": "Server Password",
-              "Type": "Secret",
-              "DependsOn": "",
-              "DefaultValue": null,
-              "Required": false
-            },
-            {
-              "Name": "ServerUseSsl",
-              "DisplayName": "Use SSL",
+              "Name": "UseTokenAuth",
+              "DisplayName": "Use Token Authentication",
               "Type": "Bool",
               "DependsOn": "",
-              "DefaultValue": "true",
-              "Required": true
+              "DefaultValue": "false",
+              "Required": false
             }
           ],
           "EntryParameters": [],

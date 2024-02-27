@@ -40,6 +40,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             dynamic properties = JsonConvert.DeserializeObject(config.CertificateStoreDetails.Properties);
             SetPAMSecrets(config.ServerUsername, config.ServerPassword, logger);
+            bool deployCertificateOnRenewal = properties.DeployCertificateOnRenewal == null || string.IsNullOrEmpty(properties.DeployCertificateOnRenewal.Value) ? false : bool.Parse(properties.DeployCertificateOnRenewal.Value);
             bool ignoreSSLWarning = properties.IgnoreSSLWarning == null || string.IsNullOrEmpty(properties.IgnoreSSLWarning.Value) ? false : bool.Parse(properties.IgnoreSSLWarning.Value);
             bool useTokenAuthentication = properties.UseTokenAuth == null || string.IsNullOrEmpty(properties.UseTokenAuth.Value) ? false : bool.Parse(properties.UseTokenAuth.Value);
 
@@ -55,7 +56,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
                         try
                         {
-                            if (config.Overwrite)
+                            if (config.Overwrite && deployCertificateOnRenewal)
                             {
                                 List<string> profileNames = f5Client.GetProfilesNamesByAlias(config.JobCertificate.Alias);
                                 if (profileNames.Count > 0)

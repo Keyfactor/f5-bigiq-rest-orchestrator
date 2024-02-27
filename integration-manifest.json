@@ -44,6 +44,14 @@
           },
           "Properties": [
             {
+              "Name": "DeployCertificateOnRenewal",
+              "DisplayName": "Deploy Certificate to Linked Big IP on Renewal",
+              "Type": "Bool",
+              "DependsOn": "",
+              "DefaultValue": "false",
+              "Required": false
+            },
+            {
               "Name": "IgnoreSSLWarning",
               "DisplayName": "Ignore SSL Warning",
               "Type": "Bool",

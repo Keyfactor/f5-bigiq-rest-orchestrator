@@ -1,63 +1,63 @@
 {
   "$schema": "https://keyfactor.github.io/integration-manifest-schema.json",
   "integration_type": "orchestrator",
-  "name": "Integration Template",
+  "name": "F5 BigIQ",
   "status": "prototype",
-  "support_level": "community",
-  "description": "This project is meant to be a template to quickly build a basic integration product build. Currently in dev, a work in progress,",
+  "support_level": "kf-supported",
+  "description": "The F5 Big IQ Orchestrator allows for the remote management of F5 Big IQ certificate stores.  Inventory and Management functions are supported.",
   "link_github": false,
   "update_catalog": false,
-  "release_dir": "UPDATE-THIS-WITH-PATH-TO-BINARY-BUILD-FOLDER",
+  "release_dir": "F5BigIQ/bin/Release",
   "about": {
     "orchestrator": {
-      "UOFramework": "10.1",
-      "keyfactor_platform_version": "9.10",
+      "UOFramework": "10.4",
+      "keyfactor_platform_version": "10.3",
       "pam_support": true,
       "win": {
         "supportsCreateStore": false,
         "supportsDiscovery": false,
-        "supportsManagementAdd": false,
-        "supportsManagementRemove": false,
+        "supportsManagementAdd": true,
+        "supportsManagementRemove": true,
         "supportsReenrollment": false,
-        "supportsInventory": false
+        "supportsInventory": true
       },
       "linux": {
         "supportsCreateStore": false,
         "supportsDiscovery": false,
-        "supportsManagementAdd": false,
-        "supportsManagementRemove": false,
+        "supportsManagementAdd": true,
+        "supportsManagementRemove": true,
         "supportsReenrollment": false,
-        "supportsInventory": false
+        "supportsInventory": true
       },
       "store_types": [
         {
-          "Name": "MyOrchestratorStoreType",
-          "ShortName": "MOST",
-          "Capability": "MOST",
+          "Name": "F5 Big IQ",
+          "ShortName": "F5-BigIQ",
+          "Capability": "F5-BigIQ",
           "LocalStore": false,
           "SupportedOperations": {
-            "Add": false,
+            "Add": true,
             "Create": false,
             "Discovery": true,
             "Enrollment": false,
-            "Remove": false
+            "Remove": true
           },
           "Properties": [
             {
-              "Name": "CustomField1",
-              "DisplayName": "CustomField1",
-              "Type": "String",
+              "Name": "IgnoreSSLWarning",
+              "DisplayName": "Ignore SSL Warning",
+              "Type": "Bool",
               "DependsOn": "",
-              "DefaultValue": "default",
-              "Required": true
+              "DefaultValue": "false",
+              "Required": false
             },
             {
-              "Name": "CustomField2",
-              "DisplayName": "CustomField2",
-              "Type": "String",
+              "Name": "UseTokenAuth",
+              "DisplayName": "Use Token Authentication",
+              "Type": "Bool",
               "DependsOn": "",
-              "DefaultValue": null,
-              "Required": true
+              "DefaultValue": "false",
+              "Required": false
             }
           ],
           "EntryParameters": [],
@@ -66,14 +66,12 @@
             "StoreRequired": false,
             "Style": "Default"
           },
-          "StorePathType": "",
-          "StorePathValue": "",
-          "PrivateKeyAllowed": "Forbidden",
+          "PrivateKeyAllowed": "Required",
           "JobProperties": [],
           "ServerRequired": true,
           "PowerShell": false,
           "BlueprintAllowed": false,
-          "CustomAliasAllowed": "Forbidden"
+          "CustomAliasAllowed": "Required"
         }
       ]
     }

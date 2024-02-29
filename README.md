@@ -165,6 +165,14 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
   - **Depends on**=unchecked
   - **Required**=unchecked
 
+- **Deploy Certificate to Linked Big IP on Renewal** - optional - This setting determines whether renewing a certificate (scheduling a Management-Add job with Overwrite checked) will also deploy that renewed certificate to any "linked" F5 Big IP devices.  "Links" are determined by searching all F5 Big IQ profiles and virtual servers to see if the certificate being renewed is used by a Big IP device.  An "immediate" deployment is then scheduled with in F5 Big IQ for each linked Big IP device.  If this option does not exist or is set to False, deployments will NOT be done.
+  - **Name**=DeployCertificateOnRenewal
+  - **Display Name**=Deploy Certificate to Linked Big IP on Renewal
+  - **Type**=Bool
+  - **Default Value**={client preference}
+  - **Depends on**=unchecked
+  - **Required**=unchecked
+
   Please note, after saving the store type, going back into this screen will show three additional Custom Fields: Server Username, Server Password, and Use SSL.  These are added internally by Keyfactor Command and should not be modified.
 
 **Entry Parameters Tab**

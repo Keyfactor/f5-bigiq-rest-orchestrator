@@ -224,7 +224,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 {
                     RestRequest request2 = new RestRequest(virtualServerItem.VirtualServerProfilesCollectionReference.ItemLink.Replace(LOCAL_URL_VALUE, BaseUrl), Method.Get);
                     JObject json2 = SubmitRequest(request2);
-                    F5VirtualServerProfile virtualServerProfiles = JsonConvert.DeserializeObject<F5VirtualServerProfile>(json2.ToString(), new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Include });
+                    F5VirtualServerProfile virtualServerProfiles = JsonConvert.DeserializeObject<F5VirtualServerProfile>(json2.ToString());
 
                     if (virtualServerProfiles.VirtualServerProfileItems.Any(p => p.VirtualServerProfileClientSSLReference != null && virtualServerNames.Contains(p.VirtualServerProfileClientSSLReference.Name)))
                     {

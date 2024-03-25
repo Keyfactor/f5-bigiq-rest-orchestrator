@@ -166,14 +166,6 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
   - **Required**=unchecked
 
 - **Use Token Authentication** - optional - If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls that the integration uses, you will need to add this Custom Field and set the value to True on the managed certificate store.  If this exists and is set to True for the store, the store userid/password credentials you set for the certificate store will be used once to receive a token.  This token is then used for all remaining API calls for the duration of the job.  If this option does not exist or is set to False, the userid/password credentials you set on the certificate store will be used for each API call.
-  - **Name**=LoginProviderName
-  - **Display Name**=Authentication Provider Name
-  - **Type**=String
-  - **Default Value**={client preference}
-  - **Depends on**=""
-  - **Required**=unchecked
-
-- **Use Token Authentication** - optional - If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls that the integration uses, you will need to add this Custom Field and set the value to True on the managed certificate store.  If this exists and is set to True for the store, the store userid/password credentials you set for the certificate store will be used once to receive a token.  This token is then used for all remaining API calls for the duration of the job.  If this option does not exist or is set to False, the userid/password credentials you set on the certificate store will be used for each API call.
   - **Name**=UseTokenAuth
   - **Display Name**=Use Token Authentication
   - **Type**=Bool
@@ -213,7 +205,10 @@ Navigate to Certificate Locations =\> Certificate Stores within Keyfactor Comman
 
 - **Ignore SSL Warning** - Optional.  Set this to True if you wish to ignore SSL warnings from F5 that occur during API calls when the site does not have a trusted certificate with the proper SAN bound to it.  If you chose not to add this Custom Field when creating the Certificate Store Type, the default value of False will be assumed.  If this value is False (or missing) SSL warnings will cause errors during orchestrator extension jobs.
 
-- **Use Token Authentication** - Optional.  Set this to True if you wish to use F5 Big IQ's token authentiation instead of basic authentication for all API requests.  If you chose not to add this optional Custom Field when creating the Certificate Store Type, the default value of False will be assumed and basic authentication will be used for all API requests for all jobs.  Setting this value to True will enable an initial basic authenticated request to acquire an authentication token, which will then be used for all subsequent API requests.
+- **Use Token Authentication** - Optional.  Set this to True if you wish to use F5 Big IQ's token authentiation instead of basic authentication for all API requests.  If you chose not to add this optional Custom Field when creating the Certificate Store Type, the default value of False will be assumed and basic authentication will be used for all API requests for all jobs.  Setting this value to True will enable an initial basic authenticated request to acquire an authentication token, which will then be used for all subsequent API requests.   
+
+- **Use Token Authentication Provider Name** - Optional - If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token.  If you choose leave this field blank, the default of "TMOS" will be used.  
+
 
 - **Server Username/Password** - Required.  The credentials used to log into the F5 Big IQ device to perform API calls.  These values for server login can be either:
   

@@ -43,10 +43,11 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             bool deployCertificateOnRenewal = properties.DeployCertificateOnRenewal == null || string.IsNullOrEmpty(properties.DeployCertificateOnRenewal.Value) ? false : bool.Parse(properties.DeployCertificateOnRenewal.Value);
             bool ignoreSSLWarning = properties.IgnoreSSLWarning == null || string.IsNullOrEmpty(properties.IgnoreSSLWarning.Value) ? false : bool.Parse(properties.IgnoreSSLWarning.Value);
             bool useTokenAuthentication = properties.UseTokenAuth == null || string.IsNullOrEmpty(properties.UseTokenAuth.Value) ? false : bool.Parse(properties.UseTokenAuth.Value);
+            string loginProviderName = properties.LoginProviderName == null || string.IsNullOrEmpty(properties.LoginProviderName.Value) ? "tmos" : properties.LoginProviderName.Value;
 
             try
             {
-                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, ServerUserName, ServerPassword, useTokenAuthentication, ignoreSSLWarning);
+                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, ServerUserName, ServerPassword, loginProviderName, useTokenAuthentication, ignoreSSLWarning);
                 
                 switch (config.OperationType)
                 {

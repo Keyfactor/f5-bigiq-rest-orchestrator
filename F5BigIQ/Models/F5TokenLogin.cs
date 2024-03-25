@@ -16,8 +16,8 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
         internal string UserId { get; set; }
         [JsonProperty("password")]
         internal string Password { get; set; }
-        //[JsonProperty("loginReference")]
-        //internal string ProviderName { get; set; }
+        [JsonProperty("loginProviderName")]
+        internal string LoginProviderName { get; set; }
     }
 
     internal class F5LoginResponse

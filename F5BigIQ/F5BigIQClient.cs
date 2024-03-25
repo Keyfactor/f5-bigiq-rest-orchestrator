@@ -49,7 +49,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private string Password { get; set; }
         private RestClient Client { get; set; }
 
-        internal F5BigIQClient(string baseUrl, string id, string pswd, bool useTokenAuth, bool ignoreSSLWarning)
+        internal F5BigIQClient(string baseUrl, string id, string pswd, string loginProviderName, bool useTokenAuth, bool ignoreSSLWarning)
         {
             logger = LogHandler.GetClassLogger<F5BigIQClient>();
             BaseUrl = baseUrl;
@@ -59,7 +59,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             if (useTokenAuth)
             {
-                string token = GetAccessToken(id, pswd);
+                string token = GetAccessToken(id, pswd, loginProviderName);
                 Client = GetRestClient(baseUrl, id, pswd, ignoreSSLWarning, true);
                 Client.AddDefaultHeader("X-F5-Auth-Token", token);
             }
@@ -355,11 +355,11 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             logger.MethodExit(LogLevel.Debug);
         }
 
-        private string GetAccessToken(string id, string pswd)
+        private string GetAccessToken(string id, string pswd, string loginProviderName)
         {
             logger.MethodEntry(LogLevel.Debug);
 
-            F5LoginRequest loginRequest = new F5LoginRequest() { UserId = id, Password = pswd }; //, ProviderName = "tmos" };
+            F5LoginRequest loginRequest = new F5LoginRequest() { UserId = id, Password = pswd, LoginProviderName = loginProviderName}; //, ProviderName = "tmos" };
             RestRequest request = new RestRequest($"/mgmt/shared/authn/login", Method.Post);
             request.AddParameter("application/json", JsonConvert.SerializeObject(loginRequest), ParameterType.RequestBody);
 

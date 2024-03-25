@@ -66,6 +66,14 @@
               "DependsOn": "",
               "DefaultValue": "false",
               "Required": false
+            },
+            {
+              "Name": "LoginProviderName",
+              "DisplayName": "Authentication Provider Name",
+              "Type": "String",
+              "DependsOn": "UseTokenAuth",
+              "DefaultValue": "",
+              "Required": false
             }
           ],
           "EntryParameters": [],

@@ -3,7 +3,7 @@
 
 The F5 Big IQ Orchestrator allows for the remote management of F5 Big IQ certificate stores.  Inventory and Management functions are supported.
 
-#### Integration status: Prototype - Demonstration quality. Not for use in customer environments.
+#### Integration status: Production - Ready for use in production environments.
 
 ## About the Keyfactor Universal Orchestrator Extension
 
@@ -38,7 +38,7 @@ The Keyfactor Universal Orchestrator may be installed on either Windows or Linux
 |Supports Management Remove|&check; |&check; |
 |Supports Create Store|  |  |
 |Supports Discovery|  |  |
-|Supports Renrollment|  |  |
+|Supports Reenrollment|  |  |
 |Supports Inventory|&check; |&check; |
 
 
@@ -220,4 +220,7 @@ Navigate to Certificate Locations =\> Certificate Stores within Keyfactor Comman
 - **Use SSL** - N/A.  This value is not referenced in the F5 Big IQ Orchestrator Extension.  The value you enter for Client Machine, and specifically whether the protocol entered is http:// or https:// will determine whether a TLS (SSL) connection is utilized.
 
 - **Inventory Schedule** – Set a schedule for running Inventory jobs or "none", if you choose not to schedule Inventory at this time.
+
+When creating cert store type manually, that store property names and entry parameter names are case sensitive
+
 

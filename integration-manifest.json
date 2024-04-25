@@ -2,11 +2,11 @@
   "$schema": "https://keyfactor.github.io/integration-manifest-schema.json",
   "integration_type": "orchestrator",
   "name": "F5 BigIQ",
-  "status": "prototype",
+  "status": "production",
   "support_level": "kf-supported",
   "description": "The F5 Big IQ Orchestrator allows for the remote management of F5 Big IQ certificate stores.  Inventory and Management functions are supported.",
-  "link_github": false,
-  "update_catalog": false,
+  "link_github": true,
+  "update_catalog": true,
   "release_dir": "F5BigIQ/bin/Release",
   "about": {
     "orchestrator": {

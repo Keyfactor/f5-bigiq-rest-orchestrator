@@ -40,6 +40,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private const int ITEMS_PER_PAGE = 50;
         private const string ADD_COMMAND = "ADD_PKCS12";
         private const string REPLACE_COMMAND = "REPLACE_PKCS12";
+        private const string GENERATE_CSR_COMMAND = "GENERATE_CSR";
         private const string ALIAS_SUFFIX = ".crt";
         private const string ALIAS_KEY_SUFFIX = ".key";
 
@@ -174,6 +175,42 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             SubmitRequest(request);
 
             logger.MethodExit(LogLevel.Debug);
+        }
+
+        internal void GenerateCSR(string storePath, string alias, string b64Certificate, string password, bool overwriteExisting)
+        {
+            logger.MethodEntry(LogLevel.Debug);
+
+            string aliasWithSuffix = alias + ALIAS_SUFFIX;
+            F5Certificate f5Certificate = GetCertificateByName(aliasWithSuffix);
+
+            if (f5Certificate.TotalCertificates > 1)
+                throw new F5BigIQException($"Two or more certificates already exist with the alias name of {alias}.");
+            if (f5Certificate.TotalCertificates == 1 && !overwriteExisting)
+                throw new F5BigIQException($"Certificate with alias name {alias} already exists but Overwrite is set to FALSE.  Please re-schedule this job and select the Overwrite checkbox (set to TRUE) if you wish to replace this certificate.");
+
+            F5Certificate f5Key = f5Certificate.TotalCertificates == 1 ? GetKeyByName(alias + ALIAS_KEY_SUFFIX) : null;
+
+            string uploadFileName = Guid.NewGuid().ToString() + ".p12";
+            byte[] certBytes = Convert.FromBase64String(b64Certificate);
+
+            UploadCertificateFile(certBytes, uploadFileName);
+
+            F5CertificateAddRequest addRequest = new F5CertificateAddRequest()
+            {
+                Alias = aliasWithSuffix,
+                FileLocation = $@"{UPLOAD_FOLDER}/{uploadFileName}",
+                Partition = storePath,
+                Password = password,
+                Command = f5Certificate.TotalCertificates == 1 ? REPLACE_COMMAND : ADD_COMMAND,
+                CertReference = (f5Certificate.TotalCertificates == 1 ? new CertificateReference() { Link = f5Certificate.CertificateItems[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null),
+                KeyReference = (f5Certificate.TotalCertificates == 1 ? new CertificateReference() { Link = f5Key.CertificateItems[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null)
+            };
+
+            RestRequest request = new RestRequest(POST_ENDPOINT, Method.Post);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(addRequest), ParameterType.RequestBody);
+
+            SubmitRequest(request);
         }
 
         internal List<string> GetProfilesNamesByAlias(string alias)

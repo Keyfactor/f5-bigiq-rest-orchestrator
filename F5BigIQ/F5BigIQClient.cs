@@ -177,7 +177,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             logger.MethodExit(LogLevel.Debug);
         }
 
-        internal void GenerateCSR(string storePath, string alias, string b64Certificate, string password, bool overwriteExisting)
+        internal void GenerateCSR(string storePath, string alias, string subjectText, string keyType, int keySize, string[] sans)
         {
             logger.MethodEntry(LogLevel.Debug);
 

@@ -48,7 +48,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             try
             {
-                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, ServerUserName, ServerPassword, loginProviderName, useTokenAuthentication, ignoreSSLWarning);
+                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.CertificateStoreDetails.StorePath, ServerUserName, ServerPassword, loginProviderName, useTokenAuthentication, ignoreSSLWarning);
                 List<F5CertificateItem> certItems =  f5Client.GetCertificates();
                 foreach (F5CertificateItem certItem in certItems)
                 {

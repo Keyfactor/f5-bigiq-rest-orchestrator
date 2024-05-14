@@ -28,6 +28,8 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
         internal string Id { get; set; }
         [JsonProperty("name")]
         internal string Alias { get; set; }
+        [JsonProperty("partition")]
+        internal string Partition { get; set; }
         [JsonProperty("fileReference")]
         internal F5CertificateFileReference FileReference { get; set; }
         [JsonProperty("selfLink")]

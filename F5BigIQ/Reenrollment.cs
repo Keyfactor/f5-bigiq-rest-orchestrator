@@ -6,16 +6,16 @@
 // and limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 
 using Keyfactor.Logging;
 using Keyfactor.Orchestrators.Extensions;
 using Keyfactor.Orchestrators.Common.Enums;
-using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
+using Keyfactor.Orchestrators.Extensions.Interfaces;
 
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 using Newtonsoft.Json;
-using Keyfactor.Orchestrators.Extensions.Interfaces;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
@@ -56,12 +56,20 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 return new JobResult() { Result = OrchestratorJobStatusJobResult.Failure, JobHistoryId = config.JobHistoryId, FailureMessage = $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}: {errorMessage}"};
             }
             string alias =  properties.Alias.Value;
+            bool overwrite = properties.Overwrite == null || string.IsNullOrEmpty(properties.Overwrite.Value) ? false : Convert.ToBoolean(properties.Overwrite.Value);
 
             try
             {
                 F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.CertificateStoreDetails.StorePath, ServerUserName, ServerPassword, loginProviderName, useTokenAuthentication, ignoreSSLWarning);
+                string csr = f5Client.GenerateCSR(alias, subjectText, keyType, keySize, sans);
 
-                f5Client.GenerateCSR(alias, subjectText, keyType, keySize, sans);
+                X509Certificate2 cert = submitReenrollment.Invoke(csr);
+                if (cert == null)
+                {
+                    string errorMessage = "Error retrieving certificate for CSR: certificate not returned.";
+                    logger.LogError(errorMessage);
+                    return new JobResult() { Result = OrchestratorJobStatusJobResult.Failure, JobHistoryId = config.JobHistoryId, FailureMessage = $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}: {errorMessage}" };
+                }
             }
             catch (Exception ex)
             {

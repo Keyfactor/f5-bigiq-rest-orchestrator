@@ -369,7 +369,6 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             logger.MethodEntry(LogLevel.Debug);
             foreach (AuthenticationPrompt prompt in e.Prompts)
             {
-                logger.LogDebug($"Prompt: {prompt.Request}");
                 if (prompt.Request.StartsWith("Password"))
                     prompt.Response = Password;
             }

@@ -52,8 +52,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 List<F5CertificateItem> certItems =  f5Client.GetCertificates();
                 foreach (F5CertificateItem certItem in certItems)
                 {
-                    logger.LogDebug($"{certItems.IndexOf(certItem).ToString()}");
-                    logger.LogDebug($"{certItem.Alias}");
+                    logger.LogDebug($"Retrieving Alias {certItem.Alias}, item {certItems.IndexOf(certItem).ToString()} of {certItems.Count.ToString()}");
                     if (certItem.FileReference == null)
                         continue;
                     X509Certificate2Collection certChain = f5Client.GetCertificateByLink(certItem.FileReference.Link);

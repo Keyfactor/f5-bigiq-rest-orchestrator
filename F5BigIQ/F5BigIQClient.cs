@@ -20,6 +20,7 @@ using RestSharp;
 using RestSharp.Authenticators;
 
 using Renci.SshNet;
+using Renci.SshNet.Common;
 
 using Keyfactor.Logging;
 using Keyfactor.PKI.X509;
@@ -290,7 +291,10 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             byte[] rtnStore = new byte[] { };
             string serverLocation = BaseUrl.Replace("https://", String.Empty);
 
-            ConnectionInfo connectionInfo = new ConnectionInfo(serverLocation, UserId, new PasswordAuthenticationMethod(UserId, Password));
+            KeyboardInteractiveAuthenticationMethod keyboardAuthentication = new KeyboardInteractiveAuthenticationMethod(UserId);
+            keyboardAuthentication.AuthenticationPrompt += KeyboardAuthentication_AuthenticationPrompt;
+
+            ConnectionInfo connectionInfo = new ConnectionInfo(serverLocation, UserId, keyboardAuthentication);
             using (ScpClient client = new ScpClient(connectionInfo))
             {
                 try
@@ -300,6 +304,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
                     using (MemoryStream stream = new MemoryStream())
                     {
+                        logger.LogDebug($"SCP download attempt from: {location}");
                         client.Download(location, stream);
                         rtnStore = stream.ToArray();
                     }
@@ -327,7 +332,10 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             string serverLocation = BaseUrl.Replace("https://", String.Empty);
 
-            ConnectionInfo connectionInfo = new ConnectionInfo(serverLocation, UserId, new List<AuthenticationMethod>() { new PasswordAuthenticationMethod(UserId, Password) }.ToArray());
+            KeyboardInteractiveAuthenticationMethod keyboardAuthentication = new KeyboardInteractiveAuthenticationMethod(UserId);
+            keyboardAuthentication.AuthenticationPrompt += KeyboardAuthentication_AuthenticationPrompt;
+
+            ConnectionInfo connectionInfo = new ConnectionInfo(serverLocation, UserId, keyboardAuthentication);
             using (ScpClient client = new ScpClient(connectionInfo))
             {
                 try
@@ -337,6 +345,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
                     using (MemoryStream stream = new MemoryStream(certBytes))
                     {
+                        logger.LogDebug($"SCP upload attempt to: {UPLOAD_FOLDER}/{fileName}");
                         client.Upload(stream, $"{UPLOAD_FOLDER}/{fileName}");
                     }
                 }
@@ -352,6 +361,17 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 }
             }
 
+            logger.MethodExit(LogLevel.Debug);
+        }
+
+        private void KeyboardAuthentication_AuthenticationPrompt(object sender, AuthenticationPromptEventArgs e)
+        {
+            logger.MethodEntry(LogLevel.Debug);
+            foreach (AuthenticationPrompt prompt in e.Prompts)
+            {
+                if (prompt.Request.StartsWith("Password"))
+                    prompt.Response = Password;
+            }
             logger.MethodExit(LogLevel.Debug);
         }
 

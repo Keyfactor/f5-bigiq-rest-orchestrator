@@ -49,6 +49,11 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private string UserId { get; set; }
         private string Password { get; set; }
         private RestClient Client { get; set; }
+        private F5LoginResponse LoginTokenInfo { get; set; }
+        private bool UseTokenAuth { get; set; }
+        private DateTime TokenTimeStart { get; set; }
+
+        private const int AUTH_TOKEN_TIMEOUT_IN_MINUTES = 4;
 
         internal F5BigIQClient(string baseUrl, string id, string pswd, string loginProviderName, bool useTokenAuth, bool ignoreSSLWarning)
         {
@@ -57,12 +62,15 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             UserId = id;
             Password = pswd;
             Client = GetRestClient(baseUrl, id, pswd, ignoreSSLWarning, false);
+            UseTokenAuth = useTokenAuth;
 
             if (useTokenAuth)
             {
-                string token = GetAccessToken(id, pswd, loginProviderName);
+                TokenTimeStart = DateTime.Now;
+
+                LoginTokenInfo = GetAccessToken(id, pswd, loginProviderName);
                 Client = GetRestClient(baseUrl, id, pswd, ignoreSSLWarning, true);
-                Client.AddDefaultHeader("X-F5-Auth-Token", token);
+                Client.AddDefaultHeader("X-F5-Auth-Token", LoginTokenInfo.Token.Token);
             }
         }
 
@@ -375,7 +383,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             logger.MethodExit(LogLevel.Debug);
         }
 
-        private string GetAccessToken(string id, string pswd, string loginProviderName)
+        private F5LoginResponse GetAccessToken(string id, string pswd, string loginProviderName)
         {
             logger.MethodEntry(LogLevel.Debug);
 
@@ -386,7 +394,21 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             JObject json = SubmitRequest(request);
 
             logger.MethodExit(LogLevel.Debug);
-            return JsonConvert.DeserializeObject<F5LoginResponse>(json.ToString()).Token.Token;
+            return JsonConvert.DeserializeObject<F5LoginResponse>(json.ToString());
+        }
+
+        private F5LoginResponse GetRefreshAccessToken(string refreshToken)
+        {
+            logger.MethodEntry(LogLevel.Debug);
+
+            F5TokenRefreshRequest tokenRequest = new F5TokenRefreshRequest() { RefreshToken = new F5TokenRefreshRequestToken() { Token = refreshToken } };
+            RestRequest request = new RestRequest($"/mgmt/shared/authn/exchange", Method.Post);
+            request.AddParameter("application/json", JsonConvert.SerializeObject(tokenRequest), ParameterType.RequestBody);
+
+            JObject json = SubmitRequest(request);
+
+            logger.MethodExit(LogLevel.Debug);
+            return JsonConvert.DeserializeObject<F5LoginResponse>(json.ToString());
         }
 
         private JObject SubmitRequest(RestRequest request)
@@ -394,6 +416,14 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             logger.MethodEntry(LogLevel.Debug);
             logger.LogTrace($"Request Resource: {request.Resource}");
             logger.LogTrace($"Request Method: {request.Method.ToString()}");
+
+            if (UseTokenAuth && TokenTimeStart.AddMinutes(AUTH_TOKEN_TIMEOUT_IN_MINUTES) < DateTime.Now)
+            {
+                TokenTimeStart = DateTime.Now;
+                LoginTokenInfo = GetRefreshAccessToken(LoginTokenInfo.RefreshToken.Token);
+                Client.DefaultParameters.RemoveParameter("X-F5-Auth-Token", ParameterType.HttpHeader);
+                Client.AddDefaultHeader("X-F5-Auth-Token", LoginTokenInfo.Token.Token);
+            }
 
             if (request.Method != Method.Get)
             {

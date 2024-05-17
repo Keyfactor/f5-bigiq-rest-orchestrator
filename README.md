@@ -117,7 +117,7 @@ The version number of a the F5 Big IQ Orchestrator Extension can be verified by 
 
 When creating a Keyfactor Command Certificate Store, you will be asked to enter server credentials.  These credentials will serve two purposes:
 1. They will be used to authenticate to the F5 Big IQ instance when accessing API endpoints.  Please make sure these credentials have Admin authority on F5 Big IQ.
-2. When Inventorying and Adding/Replacing certificates it will be necessary for certificate files to be transferred to and from the F5 device.  The F5 Big IQ Orchestrator Extension uses SCP (Secure Copy Protocol) to perform these functions.  Please make sure your F5 Big IQ device is set up to allow SCP to transfer files *to* /var/config/rest/downloads (a reserved F5 Big IQ folder used for file transfers) and *from* /var/config/rest/fileobject (the certificate file location path) and all subfolders.  You may need go into the /etc/ssh/sshd_config file on your F5 Big IQ device and set PasswordAuthentication from “No” to “Yes” for SCP to work.  Other configuration tasks may be necessary in your environment to enable this feature.
+2. When Inventorying and Adding/Replacing certificates it will be necessary for certificate files to be transferred to and from the F5 device.  The F5 Big IQ Orchestrator Extension uses SCP (Secure Copy Protocol) to perform these functions.  Please make sure your F5 Big IQ device is set up to allow SCP to transfer files *to* /var/config/rest/downloads (a reserved F5 Big IQ folder used for file transfers) and *from* /var/config/rest/fileobject (the certificate file location path) and all subfolders.  Other configuration tasks may be necessary in your environment to enable this feature.
 
 
 ## F5 Big IQ Orchestrator Extension Installation

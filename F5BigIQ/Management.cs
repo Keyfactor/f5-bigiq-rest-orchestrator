@@ -54,7 +54,8 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                     case CertStoreOperationType.Add:
                         try
                         {
-                            f5Client.AddReplaceBindCertificate(config.JobCertificate.Alias, config.JobCertificate.Contents, config.JobCertificate.PrivateKeyPassword, config.Overwrite, deployCertificateOnRenewal);
+                            f5Client.AddReplaceBindCertificate(config.JobCertificate.Alias, config.JobCertificate.Contents, config.JobCertificate.PrivateKeyPassword, config.Overwrite, 
+                                deployCertificateOnRenewal, F5BigIQClient.CERT_FILE_TYPE_TO_ADD.PKCS12);
                         }
                         catch (F5BigIQException ex)
                         {

@@ -86,7 +86,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
                 try
                 {
-                    f5Client.AddReplaceBindCertificate(alias, sb.ToString(), string.Empty, config.Overwrite, deployCertificateOnRenewal);
+                    f5Client.AddReplaceBindCertificate(alias, sb.ToString(), string.Empty, overwrite, deployCertificateOnRenewal, F5BigIQClient.CERT_FILE_TYPE_TO_ADD.CERT);
                 }
                 catch (F5BigIQException ex)
                 {

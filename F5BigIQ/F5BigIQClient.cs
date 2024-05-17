@@ -42,8 +42,6 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private const string POST_DEPLOY_ENDPOINT = "/mgmt/cm/adc-core/tasks/deploy-configuration";
         private const string UPLOAD_FOLDER = "/var/config/rest/downloads";
         private const int ITEMS_PER_PAGE = 50;
-        private const string ADD_COMMAND = "ADD_PKCS12";
-        private const string REPLACE_COMMAND = "REPLACE_PKCS12";
         private const string GENERATE_CSR_COMMAND = "GENERATE_CSR";
         private const string ALIAS_SUFFIX = ".crt";
         private const string ALIAS_KEY_SUFFIX = ".key";
@@ -53,6 +51,12 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             STARTED,
             FINISHED,
             FAILED
+        }
+
+        internal enum CERT_FILE_TYPE_TO_ADD
+        {
+            CERT,
+            PKCS12
         }
 
         ILogger logger;
@@ -127,9 +131,9 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             logger.MethodExit(LogLevel.Debug);
             return c.ToX509Certificate2Collection();
         }
-        internal void AddReplaceBindCertificate(string alias, string cert, string privateKeyPassword, bool overwrite, bool deployCertificateOnRenewal)
+        internal void AddReplaceBindCertificate(string alias, string cert, string privateKeyPassword, bool overwrite, bool deployCertificateOnRenewal, CERT_FILE_TYPE_TO_ADD fileType)
         {
-            AddReplaceCertificate(alias, cert, privateKeyPassword, overwrite);
+            AddReplaceCertificate(alias, cert, privateKeyPassword, overwrite, fileType);
 
             try
             {
@@ -149,30 +153,30 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 throw new F5BigIQException($"Certificate {alias} added successfully, but error occurred during attempt to check for linked Big IP deployments or deploying the certificate.", ex);
             }
         }
-        internal void AddReplaceCertificate(string alias, string b64Certificate, string password, bool overwriteExisting)
+        private void AddReplaceCertificate(string alias, string b64Certificate, string password, bool overwrite, CERT_FILE_TYPE_TO_ADD fileType)
         {
             logger.MethodEntry(LogLevel.Debug);
             F5Certificate f5Certificate = GetCertificateByName(alias);
 
             if (f5Certificate.TotalCertificates > 1)
                 throw new F5BigIQException($"Two or more certificates already exist with the alias name of {alias}.");
-            if (f5Certificate.TotalCertificates == 1 && !overwriteExisting)
+            if (f5Certificate.TotalCertificates == 1 && !overwrite)
                 throw new F5BigIQException($"Certificate with alias name {alias} already exists but Overwrite is set to FALSE.  Please re-schedule this job and select the Overwrite checkbox (set to TRUE) if you wish to replace this certificate.");
 
             F5Certificate f5Key = f5Certificate.TotalCertificates == 1 ? GetKeyByName(alias + ALIAS_KEY_SUFFIX) : null;
 
-            string uploadFileName = Guid.NewGuid().ToString() + ".p12";
+            string uploadFileName = Guid.NewGuid().ToString() + (fileType == CERT_FILE_TYPE_TO_ADD.PKCS12 ? ".p12" : ".crt");
             byte[] certBytes = Convert.FromBase64String(b64Certificate);
 
             UploadCertificateFile(certBytes, uploadFileName);
 
             F5CertificateAddRequest addRequest = new F5CertificateAddRequest()
             {
-                Alias = aliasWithSuffix,
+                Alias = alias + ALIAS_SUFFIX,
                 FileLocation = $@"{UPLOAD_FOLDER}/{uploadFileName}",
                 Partition = this.Partition,
                 Password = password,
-                Command = f5Certificate.TotalCertificates == 1 ? REPLACE_COMMAND : ADD_COMMAND,
+                Command = f5Certificate.TotalCertificates == 1 ? $"REPL_{fileType.ToString()}" : $"ADD_{fileType.ToString()}",
                 CertReference = (f5Certificate.TotalCertificates == 1 ? new CertificateReference() { Link = f5Certificate.CertificateItems[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null),
                 KeyReference = (f5Certificate.TotalCertificates == 1 ? new CertificateReference() { Link = f5Key.CertificateItems[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null)
             };
@@ -353,6 +357,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             string fileLocation = string.Empty;
             string aliasWithSuffix = name + ALIAS_SUFFIX;
+
             RestRequest request = new RestRequest($"{GET_ENDPOINT}?$filter=name+eq+'{aliasWithSuffix}'", Method.Get);
             JObject json = SubmitRequest(request);
 

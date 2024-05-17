@@ -16,6 +16,8 @@ using Keyfactor.Orchestrators.Extensions.Interfaces;
 
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Org.BouncyCastle.X509;
+using System.Text;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
@@ -61,6 +63,12 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             try
             {
                 F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.CertificateStoreDetails.StorePath, ServerUserName, ServerPassword, loginProviderName, useTokenAuthentication, ignoreSSLWarning);
+
+                if (!overwrite && f5Client.GetCertificateByName(alias).TotalCertificates > 0)
+                {
+                    throw new Exception($"Alias {alias} already exists, but Overwrite is set to False.  Overwrite must be set to True if you wish to perform reenrollment on an existing certificate.");
+                }
+
                 string csr = f5Client.GenerateCSR(alias, subjectText, keyType, keySize, sans);
 
                 X509Certificate2 cert = submitReenrollment.Invoke(csr);
@@ -69,6 +77,21 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                     string errorMessage = "Error retrieving certificate for CSR: certificate not returned.";
                     logger.LogError(errorMessage);
                     return new JobResult() { Result = OrchestratorJobStatusJobResult.Failure, JobHistoryId = config.JobHistoryId, FailureMessage = $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}: {errorMessage}" };
+                }
+
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("-----BEGIN CERTIFICATE-----");
+                sb.AppendLine(Convert.ToBase64String(cert.RawData, Base64FormattingOptions.InsertLineBreaks));
+                sb.AppendLine("-----END CERTIFICATE-----");
+
+                try
+                {
+                    f5Client.AddReplaceBindCertificate(alias, sb.ToString(), string.Empty, config.Overwrite, deployCertificateOnRenewal);
+                }
+                catch (F5BigIQException ex)
+                {
+                    logger.LogError($"Exception for {config.Capability}: {F5BigIQException.FlattenExceptionMessages(ex, string.Empty)} for job id {config.JobId}");
+                    return new JobResult() { Result = OrchestratorJobStatusJobResult.Warning, JobHistoryId = config.JobHistoryId, FailureMessage = F5BigIQException.FlattenExceptionMessages(ex, $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}.  Please see the Keyfactor Orchestrator log for more information.") };
                 }
             }
             catch (Exception ex)

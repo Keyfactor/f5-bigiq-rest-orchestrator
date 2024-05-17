@@ -25,6 +25,9 @@ using Keyfactor.Logging;
 using Keyfactor.PKI.X509;
 using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
 using Org.BouncyCastle.Asn1.Ocsp;
+using Keyfactor.Orchestrators.Common.Enums;
+using Keyfactor.Orchestrators.Extensions;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
@@ -122,16 +125,34 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             CertificateCollectionConverter c = CertificateCollectionConverterFactory.FromPEM(certChain);
 
             logger.MethodExit(LogLevel.Debug);
-
             return c.ToX509Certificate2Collection();
         }
+        internal void AddReplaceBindCertificate(string alias, string cert, string privateKeyPassword, bool overwrite, bool deployCertificateOnRenewal)
+        {
+            AddReplaceCertificate(alias, cert, privateKeyPassword, overwrite);
 
+            try
+            {
+                if (overwrite && deployCertificateOnRenewal)
+                {
+                    List<string> profileNames = GetProfilesNamesByAlias(alias);
+                    if (profileNames.Count > 0)
+                    {
+                        List<F5Deployment> f5Deployments = GetVirtualServerDeploymentsForVirtualServers(profileNames);
+                        foreach (F5Deployment f5Deployment in f5Deployments)
+                            ScheduleBigIPDeployment(f5Deployment);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new F5BigIQException($"Certificate {alias} added successfully, but error occurred during attempt to check for linked Big IP deployments or deploying the certificate.", ex);
+            }
+        }
         internal void AddReplaceCertificate(string alias, string b64Certificate, string password, bool overwriteExisting)
         {
             logger.MethodEntry(LogLevel.Debug);
-
-            string aliasWithSuffix = alias + ALIAS_SUFFIX;
-            F5Certificate f5Certificate = GetCertificateByName(aliasWithSuffix);
+            F5Certificate f5Certificate = GetCertificateByName(alias);
 
             if (f5Certificate.TotalCertificates > 1)
                 throw new F5BigIQException($"Two or more certificates already exist with the alias name of {alias}.");
@@ -326,12 +347,13 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             SubmitRequest(request);
         }
 
-        private F5Certificate GetCertificateByName(string name)
+        internal F5Certificate GetCertificateByName(string name)
         {
             logger.MethodEntry(LogLevel.Debug);
 
             string fileLocation = string.Empty;
-            RestRequest request = new RestRequest($"{GET_ENDPOINT}?$filter=name+eq+'{name}'", Method.Get);
+            string aliasWithSuffix = name + ALIAS_SUFFIX;
+            RestRequest request = new RestRequest($"{GET_ENDPOINT}?$filter=name+eq+'{aliasWithSuffix}'", Method.Get);
             JObject json = SubmitRequest(request);
 
             logger.MethodExit(LogLevel.Debug);

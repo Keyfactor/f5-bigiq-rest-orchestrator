@@ -31,5 +31,4 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
         [JsonProperty("token")]
         internal string Token { get; set; }
     }
-
 }

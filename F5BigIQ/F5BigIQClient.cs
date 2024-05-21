@@ -38,6 +38,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private const string LOCAL_URL_VALUE = @"https://localhost";
         private const string GET_ENDPOINT = "/mgmt/cm/adc-core/working-config/sys/file/ssl-cert";
         private const string GET_KEY_ENDPOINT = "/mgmt/cm/adc-core/working-config/sys/file/ssl-key";
+        private const string GET_CSR_ENDPOINT = "/mgmt/cm/adc-core/working-config/sys/file/ssl-csr";
         private const string GET_PROFILE_ENDPOINT = "/mgmt/cm/adc-core/working-config/ltm/profile/client-ssl";
         private const string GET_VIRTUAL_SERVER_ENDPOINT = "/mgmt/cm/adc-core/working-config/ltm/virtual";
         private const string POST_ENDPOINT = "/mgmt/cm/adc-core/tasks/certificate-management";
@@ -48,6 +49,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private const string REPLACE_CSR_COMMAND = "GEN_REPLACE_CSR";
         private const string ALIAS_SUFFIX = ".crt";
         private const string ALIAS_KEY_SUFFIX = ".key";
+        private const string ALIAS_CSR_SUFFIX = ".csr";
 
         private enum RESULT_STATUS
         {
@@ -180,8 +182,8 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 Partition = this.Partition,
                 Password = password,
                 Command = f5Certificate.TotalItems == 1 ? $"REPL_{fileType.ToString()}" : $"ADD_{fileType.ToString()}",
-                CertReference = (f5Certificate.TotalItems == 1 ? new CertificateReference() { Link = f5Certificate.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null),
-                KeyReference = (f5Certificate.TotalItems == 1 ? new CertificateReference() { Link = f5Key.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null)
+                CertReference = (f5Certificate.TotalItems == 1 ? new F5FileReference() { Link = f5Certificate.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null),
+                KeyReference = (f5Certificate.TotalItems == 1 ? new F5FileReference() { Link = f5Key.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null)
             };
 
             RestRequest request = new RestRequest(POST_ENDPOINT, Method.Post);
@@ -249,21 +251,21 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 if (f5Key.TotalItems > 1)
                     throw new F5BigIQException($"Multiple keys currently exist for alias {alias}.  Renewal using ODKG (Reenrollment) not possible.");
 
-                F5CertificateObject f5Key = GetCSRByName(alias);
+                F5CertificateObject f5CSR = GetCSRByName(alias);
                 if (f5Key.TotalItems > 1)
                     throw new F5BigIQException($"Multiple CSRs currently exist for alias {alias}.  Renewal using ODKG (Reenrollment) not possible.");
                 if (f5Key.TotalItems == 0)
                     throw new F5BigIQException($"No existing CSR found for alias {alias}, but key exists.  Renewal using ODKG (Reenrollment) not possible.");
 
-                csrRequest.KeyReference = (f5Key.TotalItems == 1 ? new F5CSRReference() { Link = f5Key.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null);
-
+                csrRequest.KeyReference = new F5FileReference() { Link = f5Key.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) };
+                csrRequest.CSRReference = new F5FileReference() { Link = f5CSR.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) };
             }
 
             RestRequest request = new RestRequest(POST_ENDPOINT, Method.Post);
             request.AddParameter("application/json", JsonConvert.SerializeObject(csrRequest), ParameterType.RequestBody);
 
             JObject json = SubmitRequest(request);
-            string csrLink = JsonConvert.DeserializeObject<F5CSRReference>(json.ToString()).Link.Replace(LOCAL_URL_VALUE, BaseUrl);
+            string csrLink = JsonConvert.DeserializeObject<F5CSRResultLink>(json.ToString()).Link.Replace(LOCAL_URL_VALUE, BaseUrl);
 
             JObject json2 = SubmitRequest(new RestRequest(csrLink, Method.Get));
             F5CSRResult csrResult;
@@ -336,7 +338,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
                 foreach (F5VirtualServerItem virtualServerItem in pageOfVirtualServers.VirtualServerItems)
                 {
-                    RestRequest request2 = new RestRequest(virtualServerItem.VirtualServerProfilesCollectionReference.ItemLink.Replace(LOCAL_URL_VALUE, BaseUrl), Method.Get);
+                    RestRequest request2 = new RestRequest(virtualServerItem.VirtualServerProfilesCollectionReference.Link.Replace(LOCAL_URL_VALUE, BaseUrl), Method.Get);
                     JObject json2 = SubmitRequest(request2);
                     F5VirtualServerProfile virtualServerProfiles = JsonConvert.DeserializeObject<F5VirtualServerProfile>(json2.ToString());
 
@@ -345,8 +347,8 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                         deployments.Add(new F5Deployment()
                         {
                             Name = virtualServerItem.Name + "-" +  Guid.NewGuid().ToString(),
-                            DeviceReferences = new List<F5Reference>() { new F5Reference() { ItemLink = virtualServerItem.VirtualServerDeviceReference.ItemLink } },
-                            ObjectsToDeployReferences = new List<F5Reference>() { new F5Reference() { ItemLink = virtualServerItem.ItemLink } }
+                            DeviceReferences = new List<F5FileReference>() { new F5FileReference() { Link = virtualServerItem.VirtualServerDeviceReference.Link } },
+                            ObjectsToDeployReferences = new List<F5FileReference>() { new F5FileReference() { Link = virtualServerItem.ItemLink } }
                         });
                     }
                 }
@@ -393,6 +395,21 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             string aliasWithSuffix = name + ALIAS_KEY_SUFFIX;
 
             RestRequest request = new RestRequest($"{GET_KEY_ENDPOINT}?$filter=name+eq+'{aliasWithSuffix}'", Method.Get);
+            JObject json = SubmitRequest(request);
+
+            logger.MethodExit(LogLevel.Debug);
+
+            return JsonConvert.DeserializeObject<F5CertificateObject>(json.ToString());
+        }
+
+        internal F5CertificateObject GetCSRByName(string name)
+        {
+            logger.MethodEntry(LogLevel.Debug);
+
+            string fileLocation = string.Empty;
+            string aliasWithSuffix = name + ALIAS_CSR_SUFFIX;
+
+            RestRequest request = new RestRequest($"{GET_CSR_ENDPOINT}?$filter=name+eq+'{aliasWithSuffix}'", Method.Get);
             JObject json = SubmitRequest(request);
 
             logger.MethodExit(LogLevel.Debug);

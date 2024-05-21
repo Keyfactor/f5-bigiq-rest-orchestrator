@@ -39,18 +39,12 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
         [JsonProperty("keySize")]
         internal int? KeySize { get; set; }
         [JsonProperty("csrReference")]
-        internal F5CSRReference CSRReference { get; set; }
+        internal F5FileReference CSRReference { get; set; }
         [JsonProperty("keyReference")]
-        internal F5CSRReference KeyReference { get; set; }
+        internal F5FileReference KeyReference { get; set; }
     }
 
-    internal class F5CSRReference
-    {
-        [JsonProperty("link")]
-        internal string link { get; set; }
-    }
-
-    internal class F5CSRReference
+    internal class F5CSRResultLink
     {
         [JsonProperty("selfLink")]
         internal string Link { get; set; }

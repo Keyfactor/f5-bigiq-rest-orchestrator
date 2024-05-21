@@ -38,6 +38,16 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
         internal string KeyType { get; set; }
         [JsonProperty("keySize")]
         internal int? KeySize { get; set; }
+        [JsonProperty("csrReference")]
+        internal F5CSRReference CSRReference { get; set; }
+        [JsonProperty("keyReference")]
+        internal F5CSRReference KeyReference { get; set; }
+    }
+
+    internal class F5CSRReference
+    {
+        [JsonProperty("link")]
+        internal string link { get; set; }
     }
 
     internal class F5CSRReference

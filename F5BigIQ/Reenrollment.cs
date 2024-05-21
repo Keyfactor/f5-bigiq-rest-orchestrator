@@ -41,35 +41,38 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             }
            
             dynamic properties = JsonConvert.DeserializeObject(config.CertificateStoreDetails.Properties);
+
             SetPAMSecrets(config.ServerUsername, config.ServerPassword, logger);
 
             bool deployCertificateOnRenewal = properties.DeployCertificateOnRenewal == null || string.IsNullOrEmpty(properties.DeployCertificateOnRenewal.Value) ? false : bool.Parse(properties.DeployCertificateOnRenewal.Value);
             bool ignoreSSLWarning = properties.IgnoreSSLWarning == null || string.IsNullOrEmpty(properties.IgnoreSSLWarning.Value) ? false : bool.Parse(properties.IgnoreSSLWarning.Value);
             bool useTokenAuthentication = properties.UseTokenAuth == null || string.IsNullOrEmpty(properties.UseTokenAuth.Value) ? false : bool.Parse(properties.UseTokenAuth.Value);
             string loginProviderName = properties.LoginProviderName == null || string.IsNullOrEmpty(properties.LoginProviderName.Value) ? "tmos" : properties.LoginProviderName.Value;
-            string keyType = properties.keyType == null || string.IsNullOrEmpty(properties.keyType.Value) ? string.Empty : properties.keyType.Value;
-            int? keySize = properties.keySize == null || string.IsNullOrEmpty(properties.keySize.Value) ? string.Empty : Convert.ToInt32(properties.keySize.Value);
-            string subjectText = properties.subjectText == null || string.IsNullOrEmpty(properties.subjectText.Value) ? string.Empty : properties.subjectText.Value;
-            string sans = properties.SANs == null || string.IsNullOrEmpty(properties.SANs.Value) ? string.Empty : properties.SANs.Value;
-            if (properties.Alias == null || string.IsNullOrEmpty(properties.Alias.Value))
+            
+            string keyType = !config.JobProperties.ContainsKey("keyType") || config.JobProperties["keyType"] == null || string.IsNullOrEmpty(config.JobProperties["keyType"].ToString()) ? string.Empty : config.JobProperties["keyType"].ToString();
+            int? keySize = !config.JobProperties.ContainsKey("keySize") || config.JobProperties["keySize"] == null || string.IsNullOrEmpty(config.JobProperties["keySize"].ToString()) ? null : Convert.ToInt32(config.JobProperties["keySize"]);
+            string subjectText = !config.JobProperties.ContainsKey("subjectText") || config.JobProperties["subjectText"] == null || config.JobProperties["subjectText"] == null || string.IsNullOrEmpty(config.JobProperties["subjectText"].ToString()) ? string.Empty : config.JobProperties["subjectText"].ToString();
+            string sans = !config.JobProperties.ContainsKey("SANs") || config.JobProperties["SANs"] == null || string.IsNullOrEmpty(config.JobProperties["SANs"].ToString()) ? string.Empty : config.JobProperties["SANs"].ToString();
+            if (!config.JobProperties.ContainsKey("Alias") || config.JobProperties["Alias"] == null || config.JobProperties["Alias"] == null || string.IsNullOrEmpty(config.JobProperties["Alias"].ToString()))
             {
                 string errorMessage = "Error performing reenrollment.  Alias blank or does not exist.";
                 logger.LogError(errorMessage);
                 return new JobResult() { Result = OrchestratorJobStatusJobResult.Failure, JobHistoryId = config.JobHistoryId, FailureMessage = $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}: {errorMessage}"};
             }
-            string alias =  properties.Alias.Value;
-            bool overwrite = properties.Overwrite == null || string.IsNullOrEmpty(properties.Overwrite.Value) ? false : Convert.ToBoolean(properties.Overwrite.Value);
+            string alias = config.JobProperties["Alias"].ToString();
+            bool overwrite = !config.JobProperties.ContainsKey("Overwrite") || config.JobProperties["Overwrite"] == null || string.IsNullOrEmpty(config.JobProperties["Overwrite"].ToString()) ? false : Convert.ToBoolean(config.JobProperties["Overwrite"]);
 
             try
             {
                 F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.CertificateStoreDetails.StorePath, ServerUserName, ServerPassword, loginProviderName, useTokenAuthentication, ignoreSSLWarning);
 
-                if (!overwrite && f5Client.GetCertificateByName(alias).TotalCertificates > 0)
+                int totalKeys = f5Client.GetKeyByName(alias).TotalItems;
+                if (!overwrite && totalKeys > 0)
                 {
                     throw new Exception($"Alias {alias} already exists, but Overwrite is set to False.  Overwrite must be set to True if you wish to perform reenrollment on an existing certificate.");
                 }
 
-                string csr = f5Client.GenerateCSR(alias, subjectText, keyType, keySize, sans);
+                string csr = f5Client.GenerateCSR(alias, totalKeys > 0, subjectText, keyType, keySize, sans);
 
                 X509Certificate2 cert = submitReenrollment.Invoke(csr);
                 if (cert == null)

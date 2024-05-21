@@ -28,6 +28,8 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using Keyfactor.Orchestrators.Common.Enums;
 using Keyfactor.Orchestrators.Extensions;
 using static Org.BouncyCastle.Math.EC.ECCurve;
+using Org.BouncyCastle.Tls;
+using Renci.SshNet.Security;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
@@ -43,6 +45,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private const string UPLOAD_FOLDER = "/var/config/rest/downloads";
         private const int ITEMS_PER_PAGE = 50;
         private const string GENERATE_CSR_COMMAND = "GENERATE_CSR";
+        private const string REPLACE_CSR_COMMAND = "GEN_REPLACE_CSR";
         private const string ALIAS_SUFFIX = ".crt";
         private const string ALIAS_KEY_SUFFIX = ".key";
 
@@ -97,11 +100,11 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 RestRequest request = new RestRequest(RESOURCE, Method.Get);
 
                 JObject json = SubmitRequest(request);
-                F5Certificate pageOfCerts = JsonConvert.DeserializeObject<F5Certificate>(json.ToString());
-                if (pageOfCerts.CertificateItems.Count == 0)
+                F5CertificateObject pageOfCerts = JsonConvert.DeserializeObject<F5CertificateObject>(json.ToString());
+                if (pageOfCerts.Items.Count == 0)
                     break;
 
-                certificates.AddRange(pageOfCerts.CertificateItems.Where(p => p.Partition.ToLower() == Partition.ToLower()));
+                certificates.AddRange(pageOfCerts.Items.Where(p => p.Partition.ToLower() == Partition.ToLower()));
 
                 if (pageOfCerts.TotalPages == pageOfCerts.PageIndex)
                     break;
@@ -156,14 +159,14 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private void AddReplaceCertificate(string alias, string b64Certificate, string password, bool overwrite, CERT_FILE_TYPE_TO_ADD fileType)
         {
             logger.MethodEntry(LogLevel.Debug);
-            F5Certificate f5Certificate = GetCertificateByName(alias);
+            F5CertificateObject f5Certificate = GetCertificateByName(alias);
 
-            if (f5Certificate.TotalCertificates > 1)
+            if (f5Certificate.TotalItems > 1)
                 throw new F5BigIQException($"Two or more certificates already exist with the alias name of {alias}.");
-            if (f5Certificate.TotalCertificates == 1 && !overwrite)
+            if (f5Certificate.TotalItems == 1 && !overwrite)
                 throw new F5BigIQException($"Certificate with alias name {alias} already exists but Overwrite is set to FALSE.  Please re-schedule this job and select the Overwrite checkbox (set to TRUE) if you wish to replace this certificate.");
 
-            F5Certificate f5Key = f5Certificate.TotalCertificates == 1 ? GetKeyByName(alias + ALIAS_KEY_SUFFIX) : null;
+            F5CertificateObject f5Key = f5Certificate.TotalItems == 1 ? GetKeyByName(alias) : null;
 
             string uploadFileName = Guid.NewGuid().ToString() + (fileType == CERT_FILE_TYPE_TO_ADD.PKCS12 ? ".p12" : ".crt");
             byte[] certBytes = Convert.FromBase64String(b64Certificate);
@@ -176,9 +179,9 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 FileLocation = $@"{UPLOAD_FOLDER}/{uploadFileName}",
                 Partition = this.Partition,
                 Password = password,
-                Command = f5Certificate.TotalCertificates == 1 ? $"REPL_{fileType.ToString()}" : $"ADD_{fileType.ToString()}",
-                CertReference = (f5Certificate.TotalCertificates == 1 ? new CertificateReference() { Link = f5Certificate.CertificateItems[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null),
-                KeyReference = (f5Certificate.TotalCertificates == 1 ? new CertificateReference() { Link = f5Key.CertificateItems[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null)
+                Command = f5Certificate.TotalItems == 1 ? $"REPL_{fileType.ToString()}" : $"ADD_{fileType.ToString()}",
+                CertReference = (f5Certificate.TotalItems == 1 ? new CertificateReference() { Link = f5Certificate.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null),
+                KeyReference = (f5Certificate.TotalItems == 1 ? new CertificateReference() { Link = f5Key.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null)
             };
 
             RestRequest request = new RestRequest(POST_ENDPOINT, Method.Post);
@@ -191,28 +194,28 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         {
             logger.MethodEntry(LogLevel.Debug);
 
-            F5Certificate f5Certificate = GetCertificateByName(alias + ALIAS_SUFFIX);
-            if (f5Certificate.TotalCertificates > 1)
+            F5CertificateObject f5Certificate = GetCertificateByName(alias);
+            if (f5Certificate.TotalItems > 1)
                 throw new F5BigIQException($"Two or more certificates already exist with the alias name of {alias}.");
-            if (f5Certificate.TotalCertificates == 0)
+            if (f5Certificate.TotalItems == 0)
                 throw new F5BigIQException($"Alias {alias} not found.  Delete unsuccessful.");
 
-            F5Certificate f5Key = GetKeyByName(alias + ALIAS_KEY_SUFFIX);
-            if (f5Key.TotalCertificates > 1)
+            F5CertificateObject f5Key = GetKeyByName(alias);
+            if (f5Key.TotalItems > 1)
                 throw new F5BigIQException($"Two or more certificate keys already exist with the alias name of {alias}.");
-            if (f5Key.TotalCertificates == 0)
+            if (f5Key.TotalItems == 0)
                 throw new F5BigIQException($"Key for alias {alias} not found.  Delete unsuccessful.");
 
-            RestRequest request = new RestRequest(GET_KEY_ENDPOINT + $@"/{f5Key.CertificateItems[0].Id}", Method.Delete);
+            RestRequest request = new RestRequest(GET_KEY_ENDPOINT + $@"/{f5Key.Items[0].Id}", Method.Delete);
             SubmitRequest(request);
 
-            request = new RestRequest(GET_ENDPOINT + $@"/{f5Certificate.CertificateItems[0].Id}", Method.Delete);
+            request = new RestRequest(GET_ENDPOINT + $@"/{f5Certificate.Items[0].Id}", Method.Delete);
             SubmitRequest(request);
 
             logger.MethodExit(LogLevel.Debug);
         }
 
-        internal string GenerateCSR(string alias, string subjectText, string keyType, int? keySize, string sans)
+        internal string GenerateCSR(string alias, bool replaceCSR, string subjectText, string keyType, int? keySize, string sans)
         {
             logger.MethodEntry(LogLevel.Debug);
 
@@ -220,25 +223,41 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             Dictionary<string, string> subjectValues = new Dictionary<string, string>();
             foreach (string subjectParam in subjectParams)
             {
-                string[] subjectPair = subjectParam.Split('=', 2);
+                string[] subjectPair = subjectParam.Split('=', 2, StringSplitOptions.TrimEntries);
                 subjectValues.Add(subjectPair[0].ToUpper(), subjectPair[1]);
             }
 
             F5CertificateCSRRequest csrRequest = new F5CertificateCSRRequest()
             {
-                Command = GENERATE_CSR_COMMAND,
+                Command = replaceCSR ? REPLACE_CSR_COMMAND : GENERATE_CSR_COMMAND,
                 ItemName = alias + ".csr",
                 ItemPartition = Partition,
-                CommonName = subjectValues.ContainsKey("CN") ? subjectValues["CN"] : String.Empty,
-                Organization = subjectValues.ContainsKey("O") ? subjectValues["O"] : String.Empty,
-                OrganizationalUnit = subjectValues.ContainsKey("OU") ? subjectValues["OU"] : String.Empty,
-                Country = subjectValues.ContainsKey("C") ? subjectValues["C"] : String.Empty,
-                State = subjectValues.ContainsKey("ST") ? subjectValues["ST"] : String.Empty,
-                Locality = subjectValues.ContainsKey("L") ? subjectValues["L"] : String.Empty,
+                CommonName = subjectValues.ContainsKey("CN") ? subjectValues["CN"] : null,
+                Organization = subjectValues.ContainsKey("O") ? subjectValues["O"] : null,
+                OrganizationalUnit = subjectValues.ContainsKey("OU") ? subjectValues["OU"] : null,
+                Country = subjectValues.ContainsKey("C") ? subjectValues["C"] : null,
+                State = subjectValues.ContainsKey("ST") ? subjectValues["ST"] : null,
+                Locality = subjectValues.ContainsKey("L") ? subjectValues["L"] : null,
                 KeyType = keyType,
                 KeySize = keySize.HasValue ? keySize.Value : null,
                 SubjectAlternativeNames = sans
             };
+
+            if (replaceCSR)
+            {
+                F5CertificateObject f5Key = GetKeyByName(alias);
+                if (f5Key.TotalItems > 1)
+                    throw new F5BigIQException($"Multiple keys currently exist for alias {alias}.  Renewal using ODKG (Reenrollment) not possible.");
+
+                F5CertificateObject f5Key = GetCSRByName(alias);
+                if (f5Key.TotalItems > 1)
+                    throw new F5BigIQException($"Multiple CSRs currently exist for alias {alias}.  Renewal using ODKG (Reenrollment) not possible.");
+                if (f5Key.TotalItems == 0)
+                    throw new F5BigIQException($"No existing CSR found for alias {alias}, but key exists.  Renewal using ODKG (Reenrollment) not possible.");
+
+                csrRequest.KeyReference = (f5Key.TotalItems == 1 ? new F5CSRReference() { Link = f5Key.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null);
+
+            }
 
             RestRequest request = new RestRequest(POST_ENDPOINT, Method.Post);
             request.AddParameter("application/json", JsonConvert.SerializeObject(csrRequest), ParameterType.RequestBody);
@@ -351,7 +370,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             SubmitRequest(request);
         }
 
-        internal F5Certificate GetCertificateByName(string name)
+        internal F5CertificateObject GetCertificateByName(string name)
         {
             logger.MethodEntry(LogLevel.Debug);
 
@@ -363,20 +382,22 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             logger.MethodExit(LogLevel.Debug);
 
-            return JsonConvert.DeserializeObject<F5Certificate>(json.ToString());
+            return JsonConvert.DeserializeObject<F5CertificateObject>(json.ToString());
         }
 
-        private F5Certificate GetKeyByName(string name)
+        internal F5CertificateObject GetKeyByName(string name)
         {
             logger.MethodEntry(LogLevel.Debug);
 
             string fileLocation = string.Empty;
-            RestRequest request = new RestRequest($"{GET_KEY_ENDPOINT}?$filter=name+eq+'{name}'", Method.Get);
+            string aliasWithSuffix = name + ALIAS_KEY_SUFFIX;
+
+            RestRequest request = new RestRequest($"{GET_KEY_ENDPOINT}?$filter=name+eq+'{aliasWithSuffix}'", Method.Get);
             JObject json = SubmitRequest(request);
 
             logger.MethodExit(LogLevel.Debug);
 
-            return JsonConvert.DeserializeObject<F5Certificate>(json.ToString());
+            return JsonConvert.DeserializeObject<F5CertificateObject>(json.ToString());
         }
 
         private byte[] DownloadCertificateFile(string location)

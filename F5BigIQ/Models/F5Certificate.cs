@@ -10,16 +10,16 @@ using Newtonsoft.Json;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
 {
-    internal class F5Certificate
+    internal class F5CertificateObject
     {
         [JsonProperty("pageIndex")]
         internal int PageIndex { get; set; }
         [JsonProperty("totalPages")]
         internal int TotalPages { get; set; }
         [JsonProperty("totalItems")]
-        internal int TotalCertificates { get; set; }
+        internal int TotalItems { get; set; }
         [JsonProperty("items")]
-        internal List<F5CertificateItem> CertificateItems { get; set; }
+        internal List<F5CertificateItem> Items { get; set; }
     }
 
     internal class F5CertificateItem

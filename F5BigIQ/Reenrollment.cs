@@ -82,14 +82,14 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                     return new JobResult() { Result = OrchestratorJobStatusJobResult.Failure, JobHistoryId = config.JobHistoryId, FailureMessage = $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}: {errorMessage}" };
                 }
 
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine("-----BEGIN CERTIFICATE-----");
-                sb.AppendLine(Convert.ToBase64String(cert.RawData, Base64FormattingOptions.InsertLineBreaks));
-                sb.AppendLine("-----END CERTIFICATE-----");
+                //StringBuilder sb = new StringBuilder();
+                //sb.AppendLine("-----BEGIN CERTIFICATE-----");
+                //sb.AppendLine(Convert.ToBase64String(cert.RawData, Base64FormattingOptions.InsertLineBreaks));
+                //sb.AppendLine("-----END CERTIFICATE-----");
 
                 try
                 {
-                    f5Client.AddReplaceBindCertificate(alias, sb.ToString(), string.Empty, overwrite, deployCertificateOnRenewal, F5BigIQClient.CERT_FILE_TYPE_TO_ADD.CERT);
+                    f5Client.AddReplaceBindCertificate(alias, Convert.ToBase64String(cert.RawData), string.Empty, overwrite, deployCertificateOnRenewal, F5BigIQClient.CERT_FILE_TYPE_TO_ADD.CERT);
                 }
                 catch (F5BigIQException ex)
                 {

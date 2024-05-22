@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 
@@ -177,7 +178,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             F5CertificateAddRequest addRequest = new F5CertificateAddRequest()
             {
-                Alias = alias + ALIAS_SUFFIX,
+                Alias = alias,
                 FileLocation = $@"{UPLOAD_FOLDER}/{uploadFileName}",
                 Partition = this.Partition,
                 Password = password,
@@ -276,12 +277,13 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 if (csrResult.Status.ToUpper() == RESULT_STATUS.FAILED.ToString() || csrResult.Status == RESULT_STATUS.FINISHED.ToString())
                     break;
 
-                if (tryNumber > 10)
+                if (tryNumber >= 10)
                 {
                     throw new F5BigIQException("CSR Generation request did not complete in a timely manner.");
                 }
                 json2 = SubmitRequest(new RestRequest(csrLink, Method.Get));
                 tryNumber++;
+                Thread.Sleep(1000);
             } while (tryNumber < 11);
 
             if (csrResult.Status.ToUpper() == RESULT_STATUS.FAILED.ToString())

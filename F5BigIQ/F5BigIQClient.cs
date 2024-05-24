@@ -48,7 +48,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         private const int ITEMS_PER_PAGE = 50;
         private const string GENERATE_CSR_COMMAND = "GENERATE_CSR";
         private const string REPLACE_CSR_COMMAND = "GEN_REPLACE_CSR";
-        private const string ALIAS_SUFFIX = ".crt";
+        private const string ALIAS_CRT_SUFFIX = ".crt";
         private const string ALIAS_KEY_SUFFIX = ".key";
         private const string ALIAS_CSR_SUFFIX = ".csr";
 
@@ -114,7 +114,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
                 currentPageIndex = pageOfCerts.PageIndex + 1;
             } while (1 == 1);
-            certificates.ForEach(p => p.Alias = p.Alias.Replace(ALIAS_SUFFIX, string.Empty));
+            certificates.ForEach(p => p.Alias = p.Alias.Replace(ALIAS_CRT_SUFFIX, string.Empty));
 
             logger.MethodExit(LogLevel.Debug);
 
@@ -176,9 +176,9 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             UploadCertificateFile(certBytes, uploadFileName);
 
-            F5CertificateAddRequest addRequest = new F5CertificateAddRequest()
+            F5CertificateRequest addRequest = new F5CertificateRequest()
             {
-                Alias = alias,
+                Alias = alias + ALIAS_CRT_SUFFIX,
                 FileLocation = $@"{UPLOAD_FOLDER}/{uploadFileName}",
                 Partition = this.Partition,
                 Password = password,
@@ -190,7 +190,29 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             RestRequest request = new RestRequest(POST_ENDPOINT, Method.Post);
             request.AddParameter("application/json", JsonConvert.SerializeObject(addRequest), ParameterType.RequestBody);
 
-            SubmitRequest(request);
+            JObject json = SubmitRequest(request);
+            string certificateLink = JsonConvert.DeserializeObject<F5CertificateResultLink>(json.ToString()).Link.Replace(LOCAL_URL_VALUE, BaseUrl);
+
+            JObject json2 = SubmitRequest(new RestRequest(certificateLink, Method.Get));
+            F5CertificateResult CertificateResult;
+            int tryNumber = 1;
+            do
+            {
+                CertificateResult = JsonConvert.DeserializeObject<F5CertificateResult>(json2.ToString());
+                if (CertificateResult.Status.ToUpper() == RESULT_STATUS.FAILED.ToString() || CertificateResult.Status == RESULT_STATUS.FINISHED.ToString())
+                    break;
+
+                if (tryNumber >= 20)
+                {
+                    throw new F5BigIQException("Certificate Add request did not complete in a timely manner.");
+                }
+                json2 = SubmitRequest(new RestRequest(certificateLink, Method.Get));
+                tryNumber++;
+                Thread.Sleep(5000);
+            } while (tryNumber < 21);
+
+            if (CertificateResult.Status.ToUpper() == RESULT_STATUS.FAILED.ToString())
+                throw new F5BigIQException($"Certificate Add failed: {CertificateResult.ErrorMessage}.");
         }
 
         internal void DeleteCertificate(string alias)
@@ -277,14 +299,14 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 if (csrResult.Status.ToUpper() == RESULT_STATUS.FAILED.ToString() || csrResult.Status == RESULT_STATUS.FINISHED.ToString())
                     break;
 
-                if (tryNumber >= 10)
+                if (tryNumber >= 20)
                 {
                     throw new F5BigIQException("CSR Generation request did not complete in a timely manner.");
                 }
                 json2 = SubmitRequest(new RestRequest(csrLink, Method.Get));
                 tryNumber++;
-                Thread.Sleep(1000);
-            } while (tryNumber < 11);
+                Thread.Sleep(5000);
+            } while (tryNumber < 21);
 
             if (csrResult.Status.ToUpper() == RESULT_STATUS.FAILED.ToString())
                 throw new F5BigIQException($"CSR Generation failed: {csrResult.ErrorMessage}.");
@@ -298,7 +320,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         {
             logger.MethodEntry(LogLevel.Debug);
             List<string> profileNames = new List<string>();
-            string aliasWithSuffix = alias + ALIAS_SUFFIX;
+            string aliasWithSuffix = alias + ALIAS_CRT_SUFFIX;
 
             int currentPageIndex = 1;
 
@@ -379,7 +401,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             logger.MethodEntry(LogLevel.Debug);
 
             string fileLocation = string.Empty;
-            string aliasWithSuffix = name + ALIAS_SUFFIX;
+            string aliasWithSuffix = name + ALIAS_CRT_SUFFIX;
 
             RestRequest request = new RestRequest($"{GET_ENDPOINT}?$filter=name+eq+'{aliasWithSuffix}'", Method.Get);
             JObject json = SubmitRequest(request);

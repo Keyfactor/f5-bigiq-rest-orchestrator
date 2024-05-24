@@ -13,6 +13,7 @@ using Keyfactor.Logging;
 using Keyfactor.Orchestrators.Extensions;
 using Keyfactor.Orchestrators.Common.Enums;
 using Keyfactor.Orchestrators.Extensions.Interfaces;
+using Keyfactor.PKI.X509;
 
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -69,7 +70,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 int totalKeys = f5Client.GetKeyByName(alias).TotalItems;
                 if (!overwrite && totalKeys > 0)
                 {
-                    throw new Exception($"Alias {alias} already exists, but Overwrite is set to False.  Overwrite must be set to True if you wish to perform reenrollment on an existing certificate.");
+                    throw new Exception($"Alias {alias} already exists, but Overwrite is set to False.  Overwrite must be set to True if you wish to perform reenrollment on an existing alias.");
                 }
 
                 string csr = f5Client.GenerateCSR(alias, totalKeys > 0, subjectText, keyType, keySize, sans);
@@ -82,14 +83,12 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                     return new JobResult() { Result = OrchestratorJobStatusJobResult.Failure, JobHistoryId = config.JobHistoryId, FailureMessage = $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}: {errorMessage}" };
                 }
 
-                //StringBuilder sb = new StringBuilder();
-                //sb.AppendLine("-----BEGIN CERTIFICATE-----");
-                //sb.AppendLine(Convert.ToBase64String(cert.RawData, Base64FormattingOptions.InsertLineBreaks));
-                //sb.AppendLine("-----END CERTIFICATE-----");
+                byte[] pemBytes = Encoding.ASCII.GetBytes(CertificateConverterFactory.FromX509Certificate2(cert).ToPEM(true));
 
                 try
                 {
-                    f5Client.AddReplaceBindCertificate(alias, Convert.ToBase64String(cert.RawData), string.Empty, overwrite, deployCertificateOnRenewal, F5BigIQClient.CERT_FILE_TYPE_TO_ADD.CERT);
+                    f5Client.AddReplaceBindCertificate(alias, Convert.ToBase64String(pemBytes), 
+                        string.Empty, overwrite, deployCertificateOnRenewal, F5BigIQClient.CERT_FILE_TYPE_TO_ADD.CERT);
                 }
                 catch (F5BigIQException ex)
                 {

@@ -139,6 +139,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
         }
         internal void AddReplaceBindCertificate(string alias, string cert, string privateKeyPassword, bool overwrite, bool deployCertificateOnRenewal, CERT_FILE_TYPE_TO_ADD fileType)
         {
+            logger.MethodEntry(LogLevel.Debug);
             AddReplaceCertificate(alias, cert, privateKeyPassword, overwrite, fileType);
 
             try
@@ -158,7 +159,10 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             {
                 throw new F5BigIQException($"Certificate {alias} added successfully, but error occurred during attempt to check for linked Big IP deployments or deploying the certificate.", ex);
             }
+
+            logger.MethodExit(LogLevel.Debug);
         }
+
         private void AddReplaceCertificate(string alias, string b64Certificate, string password, bool overwrite, CERT_FILE_TYPE_TO_ADD fileType)
         {
             logger.MethodEntry(LogLevel.Debug);
@@ -182,7 +186,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 FileLocation = $@"{UPLOAD_FOLDER}/{uploadFileName}",
                 Partition = this.Partition,
                 Password = password,
-                Command = f5Certificate.TotalItems == 1 ? $"REPL_{fileType.ToString()}" : $"ADD_{fileType.ToString()}",
+                Command = f5Certificate.TotalItems == 1 ? $"REPLACE_{fileType.ToString()}" : $"ADD_{fileType.ToString()}",
                 CertReference = (f5Certificate.TotalItems == 1 ? new F5FileReference() { Link = f5Certificate.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null),
                 KeyReference = (f5Certificate.TotalItems == 1 ? new F5FileReference() { Link = f5Key.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null)
             };
@@ -213,6 +217,8 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             if (CertificateResult.Status.ToUpper() == RESULT_STATUS.FAILED.ToString())
                 throw new F5BigIQException($"Certificate Add failed: {CertificateResult.ErrorMessage}.");
+
+            logger.MethodExit(LogLevel.Debug);
         }
 
         internal void DeleteCertificate(string alias)
@@ -567,10 +573,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
                 logger.LogError(exceptionMessage);
                 logger.MethodExit(LogLevel.Debug);
-                if (response.ErrorException != null)
-                    throw response.ErrorException;
-                else
-                    throw new F5BigIQException(exceptionMessage);
+                throw new F5BigIQException(exceptionMessage);
             }
 
             JObject json = JObject.Parse(response.Content);

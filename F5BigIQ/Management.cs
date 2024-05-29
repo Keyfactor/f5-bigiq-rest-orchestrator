@@ -47,32 +47,20 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             try
             {
-                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, ServerUserName, ServerPassword, loginProviderName, useTokenAuthentication, ignoreSSLWarning);
+                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.CertificateStoreDetails.StorePath, ServerUserName, ServerPassword, loginProviderName, useTokenAuthentication, ignoreSSLWarning);
                 
                 switch (config.OperationType)
                 {
                     case CertStoreOperationType.Add:
-                        f5Client.AddReplaceCertificate(config.CertificateStoreDetails.StorePath, config.JobCertificate.Alias,
-                            config.JobCertificate.Contents, config.JobCertificate.PrivateKeyPassword, config.Overwrite);
-
                         try
                         {
-                            if (config.Overwrite && deployCertificateOnRenewal)
-                            {
-                                List<string> profileNames = f5Client.GetProfilesNamesByAlias(config.JobCertificate.Alias);
-                                if (profileNames.Count > 0)
-                                {
-                                    List<F5Deployment> f5Deployments = f5Client.GetVirtualServerDeploymentsForVirtualServers(profileNames);
-                                    foreach (F5Deployment f5Deployment in f5Deployments)
-                                        f5Client.ScheduleBigIPDeployment(f5Deployment);
-                                }
-                            }
+                            f5Client.AddReplaceBindCertificate(config.JobCertificate.Alias, config.JobCertificate.Contents, config.JobCertificate.PrivateKeyPassword, config.Overwrite, 
+                                deployCertificateOnRenewal, F5BigIQClient.CERT_FILE_TYPE_TO_ADD.PKCS12);
                         }
-                        catch (Exception ex)
+                        catch (F5BigIQException ex)
                         {
-                            string msg = $"Certificate {config.JobCertificate.Alias} added successfully, but error occurred during attempt to check for linked Big IP deployments or deploying the certificate.";
-                            logger.LogError($"Exception for {config.Capability}: {F5BigIQException.FlattenExceptionMessages(ex, msg)} for job id {config.JobId}");
-                            return new JobResult() { Result = OrchestratorJobStatusJobResult.Warning, JobHistoryId = config.JobHistoryId, FailureMessage = F5BigIQException.FlattenExceptionMessages(ex, $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}: {msg}  Please see the Keyfactor Orchestrator log for more information.") };
+                            logger.LogError($"Exception for {config.Capability}: {F5BigIQException.FlattenExceptionMessages(ex, string.Empty)} for job id {config.JobId}");
+                            return new JobResult() { Result = OrchestratorJobStatusJobResult.Warning, JobHistoryId = config.JobHistoryId, FailureMessage = F5BigIQException.FlattenExceptionMessages(ex, $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}.  Please see the Keyfactor Orchestrator log for more information.") };
                         }
                         break;
                     case CertStoreOperationType.Remove:

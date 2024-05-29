@@ -1,7 +1,7 @@
 
 # F5 BigIQ
 
-The F5 Big IQ Orchestrator allows for the remote management of F5 Big IQ certificate stores.  Inventory and Management functions are supported.
+The F5 Big IQ Orchestrator allows for the remote management of F5 Big IQ certificate stores.  Inventory, Management, and Reenrollment functions are supported.
 
 #### Integration status: Production - Ready for use in production environments.
 
@@ -38,7 +38,7 @@ The Keyfactor Universal Orchestrator may be installed on either Windows or Linux
 |Supports Management Remove|&check; |&check; |
 |Supports Create Store|  |  |
 |Supports Discovery|  |  |
-|Supports Reenrollment|  |  |
+|Supports Reenrollment|&check; |&check; |
 |Supports Inventory|&check; |&check; |
 
 

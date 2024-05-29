@@ -24,9 +24,23 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
     {
         [JsonProperty("token")]
         internal F5LoginToken Token { get; set; }
+        [JsonProperty("refreshToken")]
+        internal F5LoginToken RefreshToken { get; set; }
     }
 
     internal class F5LoginToken
+    {
+        [JsonProperty("token")]
+        internal string Token { get; set; }
+    }
+
+    internal class F5TokenRefreshRequest
+    {
+        [JsonProperty("refreshToken")]
+        internal F5TokenRefreshRequestToken RefreshToken { get; set; }
+    }
+
+    internal class F5TokenRefreshRequestToken
     {
         [JsonProperty("token")]
         internal string Token { get; set; }

@@ -21,16 +21,10 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
         [JsonProperty("name")]
         internal string Name { get; set; }
         [JsonProperty("objectsToDeployReferences")]
-        internal List<F5Reference> ObjectsToDeployReferences { get; set; }
+        internal List<F5FileReference> ObjectsToDeployReferences { get; set; }
         [JsonProperty("deploySpecifiedObjectsOnly")]
         internal bool DeploySpecifiedObjectsOnly { get { return false; } }
         [JsonProperty("deviceReferences")]
-        internal List<F5Reference> DeviceReferences { get; set; }
-    }
-
-    internal class F5Reference
-    { 
-        [JsonProperty("link")]
-        internal string ItemLink { get; set; }
+        internal List<F5FileReference> DeviceReferences { get; set; }
     }
 }

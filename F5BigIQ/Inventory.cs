@@ -48,10 +48,11 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             try
             {
-                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, ServerUserName, ServerPassword, loginProviderName, useTokenAuthentication, ignoreSSLWarning);
+                F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.CertificateStoreDetails.StorePath, ServerUserName, ServerPassword, loginProviderName, useTokenAuthentication, ignoreSSLWarning);
                 List<F5CertificateItem> certItems =  f5Client.GetCertificates();
                 foreach (F5CertificateItem certItem in certItems)
                 {
+                    logger.LogDebug($"Retrieving Alias {certItem.Alias}, item {(certItems.IndexOf(certItem) + 1).ToString()} of {certItems.Count.ToString()}"); 
                     if (certItem.FileReference == null)
                         continue;
                     X509Certificate2Collection certChain = f5Client.GetCertificateByLink(certItem.FileReference.Link);

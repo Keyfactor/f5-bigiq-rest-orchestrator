@@ -10,16 +10,16 @@ using Newtonsoft.Json;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
 {
-    internal class F5Certificate
+    internal class F5CertificateObject
     {
         [JsonProperty("pageIndex")]
         internal int PageIndex { get; set; }
         [JsonProperty("totalPages")]
         internal int TotalPages { get; set; }
         [JsonProperty("totalItems")]
-        internal int TotalCertificates { get; set; }
+        internal int TotalItems { get; set; }
         [JsonProperty("items")]
-        internal List<F5CertificateItem> CertificateItems { get; set; }
+        internal List<F5CertificateItem> Items { get; set; }
     }
 
     internal class F5CertificateItem
@@ -28,15 +28,11 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
         internal string Id { get; set; }
         [JsonProperty("name")]
         internal string Alias { get; set; }
+        [JsonProperty("partition")]
+        internal string Partition { get; set; }
         [JsonProperty("fileReference")]
-        internal F5CertificateFileReference FileReference { get; set; }
+        internal F5FileReference FileReference { get; set; }
         [JsonProperty("selfLink")]
-        internal string Link { get; set; }
-    }
-
-    internal class F5CertificateFileReference
-    {
-        [JsonProperty("link")]
         internal string Link { get; set; }
     }
 }

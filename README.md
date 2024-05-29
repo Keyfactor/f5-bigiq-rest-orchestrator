@@ -173,6 +173,7 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
   - **Required**=unchecked
 
 - **Use Token Authentication Provider Name** - optional - If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token.  If you choose not to add this field or leave it blank on the certificate store (with no default value set), the default of "TMOS" will be used.
+  - **Name**=LoginProviderName
   - **Display Name**=Use Token Authentication Provider Name
   - **Type**=String
   - **Default Value**={client preference}
@@ -186,7 +187,31 @@ Please note, after saving the store type, going back into this screen will show 
 <details>
 <summary><b>Entry Parameters Tab</b></summary>
 
-No Entry Parameters should be added.
+Entry parameters are required ONLY if you will be taking advantage of the Reenrollment (ODKG - On Device Key Generation) capability of the F5 Big IQ Orchestrator Extension.  When scheduling Reenrollment or Management jobs, some versions of Keyfactor Command may show multiple Alias and Overwrite fields.  The ones below will be used for Reenrollment while the others will be used for Management.
+
+- **Alias** - required - The identifying name of the certificate
+  - **Name**=Alias
+  - **Display Name**=Alias (Reenrollment Only)
+  - **Type**=String
+  - **Default Value=Leave Blank
+  - **Depends On**=unchecked
+  - **Required When**=Check Reenrolling an entry
+
+- **Overwrite** - required - Allow overwriting an existing certificate when reenrolling?
+  - **Name**=Overwrite
+  - **Display Name**=Overwrite (Reenrollment Only)
+  - **Type**=Bool
+  - **Default Value=False
+  - **Depends On**=unchecked
+  - **Required When**=Check Reenrolling an entry
+
+- **SANs** - optional - External SANs for the requested certificate.  Each SAN must be prefixed with the type (DNS: or IP:) and multiple SANs must be delimitted by an ampersand (&).  Example: DNS:server.domain.com&IP:127.0.0.1&DNS:server2.domain.com
+  - **Name**=SANs
+  - **Display Name**=SANs (Reenrollment Only)
+  - **Type**=String
+  - **Default Value=Leave Blank
+  - **Depends On**=unchecked
+  - **Required When**=Leave all unchecked
 
 </details>
 

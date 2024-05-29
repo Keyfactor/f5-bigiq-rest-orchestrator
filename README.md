@@ -125,6 +125,7 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 
 <details>
 <summary><b>Basic Tab</b></summary>
+
 - **Name** – Required. The descriptive display name of the new Certificate Store Type.  Suggested => F5 Big IQ
 - **Short Name** – Required. This value ***must be*** F5-BigIQ.
 - **Custom Capability** - Leave unchecked
@@ -136,6 +137,7 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 
 <details>
 <summary><b>Advanced Tab</b></summary>
+
 - **Store Path Type** - Select Freeform
 - **Supports Custom Alias** - Required
 - **Private Key Handling** - Required

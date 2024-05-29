@@ -98,6 +98,22 @@ This text would be entered in as the value for the __Server Password__, instead 
 ---
 
 
+## Overview
+
+The F5 Big IQ Orchestrator Extension supports the following use cases:
+
+- Inventories an existing F5 Big IQ device to import SSL certificates into Keyfactor Command for management
+- Add an existing or newly enrolled certificate and private key to an existing F5 Big IQ device not already on that device.
+- Remove a certificate and private key from an existing F5 Big IQ device.
+- Add an existing or newly enrolled certificate and private key to an existing F5 Big IQ device already on that device.  Optionally (based on the DeployCertificateOnRenewal setting on the certificate store), the newly renewed/replaced certificate will be deployed to any linked F5 Big IP device.
+- Reenrollment (On Device Key Generation) of a new or existing certificate on the F5 Big IQ device.  In this use case, the key pair and CSR will be created on the F5 Big IQ device, Keyfactor Command will enroll the certificate, and the certificate will then be installed on the device.  If the DeployCertificateOnRenewal option is set, the certificate will be deployed to any linked F5 Big IP devices.
+
+Use cases NOT supported by the F5 Big IQ Orchestrator Extension:
+
+- Creating new binding relationships between F5 Big IQ and any linked F5 Big IP devices.
+- Storing binding relationships in Keyfactor Command during Inventory.
+
+
 ## Versioning
 
 The version number of a the F5 Big IQ Orchestrator Extension can be verified by right clicking on the F5BigIQ.dll file, selecting Properties, and then clicking on the Details tab.

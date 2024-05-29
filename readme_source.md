@@ -1,13 +1,3 @@
-<span style="color:red">**Please note that this integration will work with the Universal Orchestrator version 10.1 or greater**</span>
-
-## Use Cases
-
-The F5 Big IQ Orchestrator Extension supports the following capabilities for SSL certificates:
-
-- Inventory
-- Management (Add and Remove)
-
-
 ## Versioning
 
 The version number of a the F5 Big IQ Orchestrator Extension can be verified by right clicking on the F5BigIQ.dll file, selecting Properties, and then clicking on the Details tab.
@@ -33,7 +23,8 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 
 ### 1\. In Keyfactor Command, create a new certificate store type by navigating to Settings (the "gear" icon in the top right) => Certificate Store Types, and clicking ADD.  Then enter the following information:
 
-**Basic Tab**
+<details>
+<summary><b>Basic Tab</b></summary>
 - **Name** – Required. The descriptive display name of the new Certificate Store Type.  Suggested => F5 Big IQ
 - **Short Name** – Required. This value ***must be*** F5-BigIQ.
 - **Custom Capability** - Leave unchecked
@@ -41,13 +32,19 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 - **General Settings** - Select Needs Server.  Select Blueprint Allowed if you plan to use blueprinting.  Leave Uses PowerShell unchecked.
 - **Password Settings** - Leave both options unchecked
 
-**Advanced Tab**
+</details>
+
+<details>
+<summary><b>Advanced Tab</b></summary>
 - **Store Path Type** - Select Freeform
 - **Supports Custom Alias** - Required
 - **Private Key Handling** - Required
 - **PFX Password Style** - Default
 
-**Custom Fields Tab**
+</details>
+
+<details>
+<summary><b>Custom Fields Tab</b></summary>
 
 - **Deploy Certificate to Linked Big IP on Renewal** - optional - This setting determines you wish to deploy renewed certificates (Management-Add jobs with Overwrite selected) to all linked Big IP devices.  Linked devices are determined by looking at all of the client-ssl profiles that reference the renewed certificate that have an associated virtual server linked to a Big IP device.  An "immediate" deployment is then scheduled within F5 Big IQ for each linked Big IP device. 
   - **Name**=DeployCertificateOnRenewal
@@ -82,10 +79,14 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 
 Please note, after saving the store type, going back into this screen will show three additional Custom Fields: Server Username, Server Password, and Use SSL.  These are added internally by Keyfactor Command and should not be modified.
 
-**Entry Parameters Tab**
+</details>
+
+<details>
+<summary><b>Entry Parameters Tab</b></summary>
 
 No Entry Parameters should be added.
 
+</details>
 
 ### 2\. Create an F5 Big IQ Certificate Store
 

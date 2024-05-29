@@ -1,3 +1,6 @@
+v1.1.0
+- Add Reenrollment capability
+
 v1.0.1
 - Modify SSH authentication protocol to use Keyboard Authentication
 - Update Rencii.SshNet version

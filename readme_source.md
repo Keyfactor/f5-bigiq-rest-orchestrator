@@ -1,13 +1,3 @@
-<span style="color:red">**Please note that this integration will work with the Universal Orchestrator version 10.1 or greater**</span>
-
-## Use Cases
-
-The F5 Big IQ Orchestrator Extension supports the following capabilities for SSL certificates:
-
-- Inventory
-- Management (Add and Remove)
-
-
 ## Versioning
 
 The version number of a the F5 Big IQ Orchestrator Extension can be verified by right clicking on the F5BigIQ.dll file, selecting Properties, and then clicking on the Details tab.
@@ -17,7 +7,7 @@ The version number of a the F5 Big IQ Orchestrator Extension can be verified by 
 
 When creating a Keyfactor Command Certificate Store, you will be asked to enter server credentials.  These credentials will serve two purposes:
 1. They will be used to authenticate to the F5 Big IQ instance when accessing API endpoints.  Please make sure these credentials have Admin authority on F5 Big IQ.
-2. When Inventorying and Adding/Replacing certificates it will be necessary for certificate files to be transferred to and from the F5 device.  The F5 Big IQ Orchestrator Extension uses SCP (Secure Copy Protocol) to perform these functions.  Please make sure your F5 Big IQ device is set up to allow SCP to transfer files *to* /var/config/rest/downloads (a reserved F5 Big IQ folder used for file transfers) and *from* /var/config/rest/fileobject (the certificate file location path) and all subfolders.  You may need go into the /etc/ssh/sshd_config file on your F5 Big IQ device and set PasswordAuthentication from “No” to “Yes” for SCP to work.  Other configuration tasks may be necessary in your environment to enable this feature.
+2. When Inventorying and Adding/Replacing certificates it will be necessary for certificate files to be transferred to and from the F5 device. The F5 Big IQ Orchestrator Extension uses SCP (Secure Copy Protocol) to perform these functions. Please make sure your F5 Big IQ device is set up to allow SCP to transfer files *to* /var/config/rest/downloads (a reserved F5 Big IQ folder used for file transfers) and *from* /var/config/rest/fileobject (the certificate file location path) and all subfolders. Other configuration tasks may be necessary in your environment to enable this feature.
 
 
 ## F5 Big IQ Orchestrator Extension Installation
@@ -33,7 +23,9 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 
 ### 1\. In Keyfactor Command, create a new certificate store type by navigating to Settings (the "gear" icon in the top right) => Certificate Store Types, and clicking ADD.  Then enter the following information:
 
-**Basic Tab**
+<details>
+<summary><b>Basic Tab</b></summary>
+
 - **Name** – Required. The descriptive display name of the new Certificate Store Type.  Suggested => F5 Big IQ
 - **Short Name** – Required. This value ***must be*** F5-BigIQ.
 - **Custom Capability** - Leave unchecked
@@ -41,13 +33,20 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 - **General Settings** - Select Needs Server.  Select Blueprint Allowed if you plan to use blueprinting.  Leave Uses PowerShell unchecked.
 - **Password Settings** - Leave both options unchecked
 
-**Advanced Tab**
+</details>
+
+<details>
+<summary><b>Advanced Tab</b></summary>
+
 - **Store Path Type** - Select Freeform
 - **Supports Custom Alias** - Required
 - **Private Key Handling** - Required
 - **PFX Password Style** - Default
 
-**Custom Fields Tab**
+</details>
+
+<details>
+<summary><b>Custom Fields Tab</b></summary>
 
 - **Deploy Certificate to Linked Big IP on Renewal** - optional - This setting determines you wish to deploy renewed certificates (Management-Add jobs with Overwrite selected) to all linked Big IP devices.  Linked devices are determined by looking at all of the client-ssl profiles that reference the renewed certificate that have an associated virtual server linked to a Big IP device.  An "immediate" deployment is then scheduled within F5 Big IQ for each linked Big IP device. 
   - **Name**=DeployCertificateOnRenewal
@@ -74,6 +73,7 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
   - **Required**=unchecked
 
 - **Use Token Authentication Provider Name** - optional - If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token.  If you choose not to add this field or leave it blank on the certificate store (with no default value set), the default of "TMOS" will be used.
+  - **Name**=LoginProviderName
   - **Display Name**=Use Token Authentication Provider Name
   - **Type**=String
   - **Default Value**={client preference}
@@ -82,10 +82,38 @@ When creating a Keyfactor Command Certificate Store, you will be asked to enter 
 
 Please note, after saving the store type, going back into this screen will show three additional Custom Fields: Server Username, Server Password, and Use SSL.  These are added internally by Keyfactor Command and should not be modified.
 
-**Entry Parameters Tab**
+</details>
 
-No Entry Parameters should be added.
+<details>
+<summary><b>Entry Parameters Tab</b></summary>
 
+Entry parameters are required ONLY if you will be taking advantage of the Reenrollment (ODKG - On Device Key Generation) capability of the F5 Big IQ Orchestrator Extension.  When scheduling Reenrollment or Management jobs, some versions of Keyfactor Command may show multiple Alias and Overwrite fields.  The ones below will be used for Reenrollment while the others will be used for Management.
+
+- **Alias** - required - The identifying name of the certificate
+  - **Name**=Alias
+  - **Display Name**=Alias (Reenrollment Only)
+  - **Type**=String
+  - **Default Value**=Leave Blank
+  - **Depends On**=unchecked
+  - **Required When**=Check Reenrolling an entry
+
+- **Overwrite** - required - Allow overwriting an existing certificate when reenrolling?
+  - **Name**=Overwrite
+  - **Display Name**=Overwrite (Reenrollment Only)
+  - **Type**=Bool
+  - **Default Value**=False
+  - **Depends On**=unchecked
+  - **Required When**=Check Reenrolling an entry
+
+- **SANs** - optional - External SANs for the requested certificate.  Each SAN must be prefixed with the type (DNS: or IP:) and multiple SANs must be delimitted by an ampersand (&).  Example: DNS:server.domain.com&IP:127.0.0.1&DNS:server2.domain.com
+  - **Name**=SANs
+  - **Display Name**=SANs (Reenrollment Only)
+  - **Type**=String
+  - **Default Value**=Leave Blank
+  - **Depends On**=unchecked
+  - **Required When**=Leave all unchecked
+
+</details>
 
 ### 2\. Create an F5 Big IQ Certificate Store
 

@@ -93,7 +93,7 @@ Entry parameters are required ONLY if you will be taking advantage of the Reenro
   - **Name**=Alias
   - **Display Name**=Alias (Reenrollment Only)
   - **Type**=String
-  - **Default Value=Leave Blank
+  - **Default Value**=Leave Blank
   - **Depends On**=unchecked
   - **Required When**=Check Reenrolling an entry
 
@@ -101,7 +101,7 @@ Entry parameters are required ONLY if you will be taking advantage of the Reenro
   - **Name**=Overwrite
   - **Display Name**=Overwrite (Reenrollment Only)
   - **Type**=Bool
-  - **Default Value=False
+  - **Default Value**=False
   - **Depends On**=unchecked
   - **Required When**=Check Reenrolling an entry
 
@@ -109,7 +109,7 @@ Entry parameters are required ONLY if you will be taking advantage of the Reenro
   - **Name**=SANs
   - **Display Name**=SANs (Reenrollment Only)
   - **Type**=String
-  - **Default Value=Leave Blank
+  - **Default Value**=Leave Blank
   - **Depends On**=unchecked
   - **Required When**=Leave all unchecked
 

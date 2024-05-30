@@ -4,7 +4,7 @@
   "name": "F5 BigIQ",
   "status": "production",
   "support_level": "kf-supported",
-  "description": "The F5 Big IQ Orchestrator allows for the remote management of F5 Big IQ certificate stores.  Inventory and Management functions are supported.",
+  "description": "The F5 Big IQ Orchestrator allows for the remote management of F5 Big IQ certificate stores.  Inventory, Management, and Reenrollment functions are supported.",
   "link_github": true,
   "update_catalog": true,
   "release_dir": "F5BigIQ/bin/Release",
@@ -18,7 +18,7 @@
         "supportsDiscovery": false,
         "supportsManagementAdd": true,
         "supportsManagementRemove": true,
-        "supportsReenrollment": false,
+        "supportsReenrollment": true,
         "supportsInventory": true
       },
       "linux": {
@@ -26,7 +26,7 @@
         "supportsDiscovery": false,
         "supportsManagementAdd": true,
         "supportsManagementRemove": true,
-        "supportsReenrollment": false,
+        "supportsReenrollment": true,
         "supportsInventory": true
       },
       "store_types": [
@@ -39,7 +39,7 @@
             "Add": true,
             "Create": false,
             "Discovery": false,
-            "Enrollment": false,
+            "Enrollment": true,
             "Remove": true
           },
           "Properties": [
@@ -76,7 +76,50 @@
               "Required": false
             }
           ],
-          "EntryParameters": [],
+          "EntryParameters": [
+            {
+              "Name": "Alias",
+              "DisplayName": "Alias (Reenrollment only)",
+              "Type": "String",
+              "RequiredWhen": {
+                "HasPrivateKey": false,
+                "OnAdd": false,
+                "OnRemove": false,
+                "OnReenrollment": true
+              },
+              "DependsOn": "",
+              "DefaultValue": "",
+              "Options": ""
+            },
+            {
+              "Name": "Overwrite",
+              "DisplayName": "Overwrite (Reenrollment only)",
+              "Type": "Bool",
+              "RequiredWhen": {
+                "HasPrivateKey": false,
+                "OnAdd": false,
+                "OnRemove": false,
+                "OnReenrollment": true
+              },
+              "DependsOn": "",
+              "DefaultValue": "False",
+              "Options": ""
+            },
+            {
+              "Name": "SANs",
+              "DisplayName": "SANs (Reenrollment only)",
+              "Type": "String",
+              "RequiredWhen": {
+                "HasPrivateKey": false,
+                "OnAdd": false,
+                "OnRemove": false,
+                "OnReenrollment": false
+              },
+              "DependsOn": "",
+              "DefaultValue": "",
+              "Options": ""
+            }
+          ],
           "PasswordOptions": {
             "EntrySupported": false,
             "StoreRequired": false,
@@ -86,7 +129,7 @@
           "JobProperties": [],
           "ServerRequired": true,
           "PowerShell": false,
-          "BlueprintAllowed": false,
+          "BlueprintAllowed": true,
           "CustomAliasAllowed": "Required"
         }
       ]

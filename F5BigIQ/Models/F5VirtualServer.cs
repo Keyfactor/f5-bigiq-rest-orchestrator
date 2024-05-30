@@ -29,20 +29,8 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ.Models
         [JsonProperty("selfLink")]
         internal string ItemLink { get; set; }
         [JsonProperty("deviceReference")]
-        internal F5VirtualServerDeviceReference VirtualServerDeviceReference { get; set; }
+        internal F5FileReference VirtualServerDeviceReference { get; set; }
         [JsonProperty("profilesCollectionReference")]
-        internal F5VirtualServerProfilesCollectionReference VirtualServerProfilesCollectionReference { get; set; }
-    }
-
-    internal class F5VirtualServerDeviceReference
-    { 
-        [JsonProperty("link")]
-        internal string ItemLink { get; set; }
-    }
-
-    internal class F5VirtualServerProfilesCollectionReference
-    {
-        [JsonProperty("link")]
-        internal string ItemLink { get; set; }
+        internal F5FileReference VirtualServerProfilesCollectionReference { get; set; }
     }
 }

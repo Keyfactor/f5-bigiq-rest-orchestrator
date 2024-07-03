@@ -1,10 +1,10 @@
 {
-    "$schema": "/Users/hroszell/coding/dev/staff-tools/keyfactor.github.io/v2/integration-manifest-schema.json",
+    "$schema": "https://keyfactor.github.io/v2/integration-manifest-schema.json",
     "integration_type": "orchestrator",
     "name": "F5 BigIQ",
     "status": "production",
     "support_level": "kf-supported",
-    "description": "The F5 Big IQ Orchestrator allows for the remote management of F5 Big IQ certificate stores.  Inventory, Management, and Reenrollment functions are supported.",
+    "description": "The F5 Big IQ Universal Orchestrator extension enables remote management of SSL certificates on F5 Big IQ devices, including inventory, addition, and removal of certificates, as well as deployment to linked F5 Big IP devices.",
     "link_github": true,
     "update_catalog": true,
     "release_dir": "F5BigIQ/bin/Release",
@@ -13,22 +13,6 @@
             "UOFramework": "10.4",
             "keyfactor_platform_version": "10.3",
             "pam_support": true,
-            "win": {
-                "supportsCreateStore": false,
-                "supportsDiscovery": false,
-                "supportsManagementAdd": true,
-                "supportsManagementRemove": true,
-                "supportsReenrollment": true,
-                "supportsInventory": true
-            },
-            "linux": {
-                "supportsCreateStore": false,
-                "supportsDiscovery": false,
-                "supportsManagementAdd": true,
-                "supportsManagementRemove": true,
-                "supportsReenrollment": true,
-                "supportsInventory": true
-            },
             "store_types": [
                 {
                     "Name": "F5 Big IQ",
@@ -55,8 +39,8 @@
                     "PowerShell": false,
                     "BlueprintAllowed": true,
                     "CustomAliasAllowed": "Required",
-                    "ClientMachineDescription": "For the Client Machine field, enter the full URL of the F5 Big IQ device portal, including the protocol (http or https). For example: https://bigiq.example.com.",
-                    "StorePathDescription": "For the Store Path field, enter the name of the partition on the F5 Big IQ device you wish to manage. Note that this value is case sensitive, for example, 'Common'."
+                    "ClientMachineDescription": "The full URL of the F5 Big IQ device portal, such as 'https://f5bigiq.example.com'.",
+                    "StorePathDescription": "The name of the partition on the F5 Big IQ device to be managed, entered in a case-sensitive manner, such as 'Common'."
                 }
             ]
         }

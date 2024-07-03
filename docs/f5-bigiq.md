@@ -103,8 +103,8 @@ The following table describes the required and optional fields for the `F5-BigIQ
 | --------- | ----------- | ------------------------- |
 | Category | Select "F5 Big IQ" or the customized certificate store name from the previous step. | |
 | Container | Optional container to associate certificate store with. | |
-| Client Machine | For the Client Machine field, enter the full URL of the F5 Big IQ device portal, including the protocol (http or https). For example: https://bigiq.example.com. | |
-| Store Path | For the Store Path field, enter the name of the partition on the F5 Big IQ device you wish to manage. Note that this value is case sensitive, for example, 'Common'. | |
+| Client Machine | The full URL of the F5 Big IQ device portal, such as 'https://f5bigiq.example.com'. | |
+| Store Path | The name of the partition on the F5 Big IQ device to be managed, entered in a case-sensitive manner, such as 'Common'. | |
 | Orchestrator | Select an approved orchestrator capable of managing `F5-BigIQ` certificates. Specifically, one with the `F5-BigIQ` capability. | |
 
 * **Using kfutil**

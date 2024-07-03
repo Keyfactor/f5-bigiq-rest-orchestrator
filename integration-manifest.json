@@ -1,138 +1,64 @@
 {
-  "$schema": "https://keyfactor.github.io/integration-manifest-schema.json",
-  "integration_type": "orchestrator",
-  "name": "F5 BigIQ",
-  "status": "production",
-  "support_level": "kf-supported",
-  "description": "The F5 Big IQ Orchestrator allows for the remote management of F5 Big IQ certificate stores.  Inventory, Management, and Reenrollment functions are supported.",
-  "link_github": true,
-  "update_catalog": true,
-  "release_dir": "F5BigIQ/bin/Release",
-  "about": {
-    "orchestrator": {
-      "UOFramework": "10.4",
-      "keyfactor_platform_version": "10.3",
-      "pam_support": true,
-      "win": {
-        "supportsCreateStore": false,
-        "supportsDiscovery": false,
-        "supportsManagementAdd": true,
-        "supportsManagementRemove": true,
-        "supportsReenrollment": true,
-        "supportsInventory": true
-      },
-      "linux": {
-        "supportsCreateStore": false,
-        "supportsDiscovery": false,
-        "supportsManagementAdd": true,
-        "supportsManagementRemove": true,
-        "supportsReenrollment": true,
-        "supportsInventory": true
-      },
-      "store_types": [
-        {
-          "Name": "F5 Big IQ",
-          "ShortName": "F5-BigIQ",
-          "Capability": "F5-BigIQ",
-          "LocalStore": false,
-          "SupportedOperations": {
-            "Add": true,
-            "Create": false,
-            "Discovery": false,
-            "Enrollment": true,
-            "Remove": true
-          },
-          "Properties": [
-            {
-              "Name": "DeployCertificateOnRenewal",
-              "DisplayName": "Deploy Certificate to Linked Big IP on Renewal",
-              "Type": "Bool",
-              "DependsOn": "",
-              "DefaultValue": "false",
-              "Required": false
+    "$schema": "/Users/hroszell/coding/dev/staff-tools/keyfactor.github.io/v2/integration-manifest-schema.json",
+    "integration_type": "orchestrator",
+    "name": "F5 BigIQ",
+    "status": "production",
+    "support_level": "kf-supported",
+    "description": "The F5 Big IQ Orchestrator allows for the remote management of F5 Big IQ certificate stores.  Inventory, Management, and Reenrollment functions are supported.",
+    "link_github": true,
+    "update_catalog": true,
+    "release_dir": "F5BigIQ/bin/Release",
+    "about": {
+        "orchestrator": {
+            "UOFramework": "10.4",
+            "keyfactor_platform_version": "10.3",
+            "pam_support": true,
+            "win": {
+                "supportsCreateStore": false,
+                "supportsDiscovery": false,
+                "supportsManagementAdd": true,
+                "supportsManagementRemove": true,
+                "supportsReenrollment": true,
+                "supportsInventory": true
             },
-            {
-              "Name": "IgnoreSSLWarning",
-              "DisplayName": "Ignore SSL Warning",
-              "Type": "Bool",
-              "DependsOn": "",
-              "DefaultValue": "false",
-              "Required": false
+            "linux": {
+                "supportsCreateStore": false,
+                "supportsDiscovery": false,
+                "supportsManagementAdd": true,
+                "supportsManagementRemove": true,
+                "supportsReenrollment": true,
+                "supportsInventory": true
             },
-            {
-              "Name": "UseTokenAuth",
-              "DisplayName": "Use Token Authentication",
-              "Type": "Bool",
-              "DependsOn": "",
-              "DefaultValue": "false",
-              "Required": false
-            },
-            {
-              "Name": "LoginProviderName",
-              "DisplayName": "Authentication Provider Name",
-              "Type": "String",
-              "DependsOn": "UseTokenAuth",
-              "DefaultValue": "",
-              "Required": false
-            }
-          ],
-          "EntryParameters": [
-            {
-              "Name": "Alias",
-              "DisplayName": "Alias (Reenrollment only)",
-              "Type": "String",
-              "RequiredWhen": {
-                "HasPrivateKey": false,
-                "OnAdd": false,
-                "OnRemove": false,
-                "OnReenrollment": true
-              },
-              "DependsOn": "",
-              "DefaultValue": "",
-              "Options": ""
-            },
-            {
-              "Name": "Overwrite",
-              "DisplayName": "Overwrite (Reenrollment only)",
-              "Type": "Bool",
-              "RequiredWhen": {
-                "HasPrivateKey": false,
-                "OnAdd": false,
-                "OnRemove": false,
-                "OnReenrollment": true
-              },
-              "DependsOn": "",
-              "DefaultValue": "False",
-              "Options": ""
-            },
-            {
-              "Name": "SANs",
-              "DisplayName": "SANs (Reenrollment only)",
-              "Type": "String",
-              "RequiredWhen": {
-                "HasPrivateKey": false,
-                "OnAdd": false,
-                "OnRemove": false,
-                "OnReenrollment": false
-              },
-              "DependsOn": "",
-              "DefaultValue": "",
-              "Options": ""
-            }
-          ],
-          "PasswordOptions": {
-            "EntrySupported": false,
-            "StoreRequired": false,
-            "Style": "Default"
-          },
-          "PrivateKeyAllowed": "Required",
-          "JobProperties": [],
-          "ServerRequired": true,
-          "PowerShell": false,
-          "BlueprintAllowed": true,
-          "CustomAliasAllowed": "Required"
+            "store_types": [
+                {
+                    "Name": "F5 Big IQ",
+                    "ShortName": "F5-BigIQ",
+                    "Capability": "F5-BigIQ",
+                    "LocalStore": false,
+                    "SupportedOperations": {
+                        "Add": true,
+                        "Create": false,
+                        "Discovery": false,
+                        "Enrollment": true,
+                        "Remove": true
+                    },
+                    "Properties": [],
+                    "EntryParameters": [],
+                    "PasswordOptions": {
+                        "EntrySupported": false,
+                        "StoreRequired": false,
+                        "Style": "Default"
+                    },
+                    "PrivateKeyAllowed": "Required",
+                    "JobProperties": [],
+                    "ServerRequired": true,
+                    "PowerShell": false,
+                    "BlueprintAllowed": true,
+                    "CustomAliasAllowed": "Required",
+                    "ClientMachineDescription": "For the Client Machine field, enter the full URL of the F5 Big IQ device portal, including the protocol (http or https). For example: https://bigiq.example.com.",
+                    "StorePathDescription": "For the Store Path field, enter the name of the partition on the F5 Big IQ device you wish to manage. Note that this value is case sensitive, for example, 'Common'."
+                }
+            ]
         }
-      ]
     }
-  }
 }

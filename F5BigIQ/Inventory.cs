@@ -80,6 +80,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
             try
             {
+                logger.LogDebug($"Submitting {inventoryItems.Count.ToString()} certificates");
                 submitInventory.Invoke(inventoryItems);
                 return new JobResult() { Result = Keyfactor.Orchestrators.Common.Enums.OrchestratorJobStatusJobResult.Success, JobHistoryId = config.JobHistoryId };
             }

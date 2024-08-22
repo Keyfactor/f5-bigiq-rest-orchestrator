@@ -1,3 +1,6 @@
+v1.1.1
+- Bug Fix: Renci library dll reference
+
 v1.1.0
 - Add Reenrollment capability
 

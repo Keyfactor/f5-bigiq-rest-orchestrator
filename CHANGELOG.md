@@ -1,3 +1,6 @@
+v1.1.1
+- Remove Renci library DLL from External References
+
 v1.1.0
 - Add Reenrollment capability
 

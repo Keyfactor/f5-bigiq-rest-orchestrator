@@ -126,7 +126,6 @@
             "Style": "Default"
           },
           "PrivateKeyAllowed": "Required",
-          "JobProperties": [],
           "ServerRequired": true,
           "PowerShell": false,
           "BlueprintAllowed": true,

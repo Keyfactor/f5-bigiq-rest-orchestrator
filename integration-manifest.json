@@ -7,40 +7,34 @@
   "description": "The F5 Big IQ Orchestrator allows for the remote management of F5 Big IQ certificate stores.  Inventory, Management, and Reenrollment functions are supported.",
   "link_github": true,
   "update_catalog": true,
+  "release_project": "F5BigIQ/F5BigIQ.csproj",
   "release_dir": "F5BigIQ/bin/Release",
   "about": {
     "orchestrator": {
       "UOFramework": "10.4",
       "keyfactor_platform_version": "10.3",
       "pam_support": true,
-      "win": {
-        "supportsCreateStore": false,
-        "supportsDiscovery": false,
-        "supportsManagementAdd": true,
-        "supportsManagementRemove": true,
-        "supportsReenrollment": true,
-        "supportsInventory": true
-      },
-      "linux": {
-        "supportsCreateStore": false,
-        "supportsDiscovery": false,
-        "supportsManagementAdd": true,
-        "supportsManagementRemove": true,
-        "supportsReenrollment": true,
-        "supportsInventory": true
-      },
       "store_types": [
         {
           "Name": "F5 Big IQ",
           "ShortName": "F5-BigIQ",
           "Capability": "F5-BigIQ",
-          "LocalStore": false,
+          "PrivateKeyAllowed": "Required",
+          "ServerRequired": true,
+          "PowerShell": false,
+          "BlueprintAllowed": true,
+          "CustomAliasAllowed": "Required",
           "SupportedOperations": {
             "Add": true,
             "Create": false,
             "Discovery": false,
             "Enrollment": true,
             "Remove": true
+          },
+          "PasswordOptions": {
+            "EntrySupported": false,
+            "StoreRequired": false,
+            "Style": "Default"
           },
           "Properties": [
             {
@@ -49,7 +43,8 @@
               "Type": "Bool",
               "DependsOn": "",
               "DefaultValue": "false",
-              "Required": false
+              "Required": false,
+              "Description": "This optional setting determines whether renewed certificates (Management-Add jobs with Overwrite selected) will be deployed to all linked Big IP devices. Linked devices are determined by looking at all of the client-ssl profiles that reference the renewed certificate that have an associated virtual server linked to a Big IP device. An immediate deployment is then scheduled within F5 Big IQ for each linked Big IP device."
             },
             {
               "Name": "IgnoreSSLWarning",
@@ -57,7 +52,8 @@
               "Type": "Bool",
               "DependsOn": "",
               "DefaultValue": "false",
-              "Required": false
+              "Required": false,
+              "Description": "If you use a self signed certificate for the F5 Big IQ portal, you will need to add this optional Custom Field and set the value to True on the managed certificate store."
             },
             {
               "Name": "UseTokenAuth",
@@ -65,7 +61,8 @@
               "Type": "Bool",
               "DependsOn": "",
               "DefaultValue": "false",
-              "Required": false
+              "Required": false,
+              "Description": "If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls, you will need to add this optional Custom Field and set the value to True on the managed certificate store. If set to True for the store, the userid/password credentials you set for the certificate store will be used once to receive a token. This token is then used for all subsequent API calls for the duration of the job. If this option does not exist or is set to False, the userid/password credentials you set for the certificate store will be used for all API calls."
             },
             {
               "Name": "LoginProviderName",
@@ -73,7 +70,8 @@
               "Type": "String",
               "DependsOn": "UseTokenAuth",
               "DefaultValue": "",
-              "Required": false
+              "Required": false,
+              "Description": "If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token. If you choose not to add this field or leave it blank on the certificate store (with no default value set), the default of \"TMOS\" will be used."
             }
           ],
           "EntryParameters": [
@@ -89,7 +87,8 @@
               },
               "DependsOn": "",
               "DefaultValue": "",
-              "Options": ""
+              "Options": "",
+              "Description": "The name F5 Big IQ uses to identify the certificate"
             },
             {
               "Name": "Overwrite",
@@ -103,7 +102,8 @@
               },
               "DependsOn": "",
               "DefaultValue": "False",
-              "Options": ""
+              "Options": "",
+              "Description": "Allow overwriting an existing certificate when reenrolling?"
             },
             {
               "Name": "SANs",
@@ -117,19 +117,10 @@
               },
               "DependsOn": "",
               "DefaultValue": "",
-              "Options": ""
+              "Options": "",
+              "Description": "External SANs for the requested certificate. Each SAN must be prefixed with the type (DNS: or IP:) and multiple SANs must be delimitted by an ampersand (&). Example: DNS:server.domain.com&IP:127.0.0.1&DNS:server2.domain.com.  This is an optional field."
             }
-          ],
-          "PasswordOptions": {
-            "EntrySupported": false,
-            "StoreRequired": false,
-            "Style": "Default"
-          },
-          "PrivateKeyAllowed": "Required",
-          "ServerRequired": true,
-          "PowerShell": false,
-          "BlueprintAllowed": true,
-          "CustomAliasAllowed": "Required"
+          ]
         }
       ]
     }

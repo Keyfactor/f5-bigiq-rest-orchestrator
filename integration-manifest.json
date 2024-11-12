@@ -72,6 +72,26 @@
               "DefaultValue": "",
               "Required": false,
               "Description": "If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token. If you choose not to add this field or leave it blank on the certificate store (with no default value set), the default of \"TMOS\" will be used."
+            },
+            {
+              "Name": "ServerUsername",
+              "DisplayName": "Server Username",
+              "Type": "Secret",
+              "DependsOn": "",
+              "DefaultValue": "",
+              "IsPAMEligible": true,
+              "Required": false,
+              "Description": "Login credential for the F5 Big IQ device.  MUST be an Admin account."
+            },
+            {
+              "Name": "ServerPassword",
+              "DisplayName": "Server Password",
+              "Type": "Secret",
+              "DependsOn": "",
+              "DefaultValue": "",
+              "IsPAMEligible": true,
+              "Required": false,
+              "Description": "Login password for the F5 Big IQ device."
             }
           ],
           "EntryParameters": [

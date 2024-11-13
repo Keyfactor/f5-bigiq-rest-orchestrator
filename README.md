@@ -92,7 +92,7 @@ To use the F5 BigIQ Universal Orchestrator extension, you **must** create the F5
     | Supports Add | ✅ Checked | Check the box. Indicates that the Store Type supports Management Add |
     | Supports Remove | ✅ Checked | Check the box. Indicates that the Store Type supports Management Remove |
     | Supports Discovery | 🔲 Unchecked |  Indicates that the Store Type supports Discovery |
-    | Supports Reenrollment | 🔲 Unchecked |  Indicates that the Store Type supports Reenrollment |
+    | Supports Reenrollment | ✅ Checked |  Indicates that the Store Type supports Reenrollment |
     | Supports Create | 🔲 Unchecked |  Indicates that the Store Type supports store creation |
     | Needs Server | ✅ Checked | Determines if a target server name is required when creating store |
     | Blueprint Allowed | ✅ Checked | Determines if store type may be included in an Orchestrator blueprint |

@@ -1,3 +1,6 @@
+v1.2.0 
+- Documentation updated to use doctool and dual build for .net6/8.
+
 v1.1.1
 - Remove Renci library DLL from External References
 

@@ -1,102 +1,33 @@
+<h1 align="center" style="border-bottom: none">
+    F5 BigIQ Universal Orchestrator Extension
+</h1>
 
-# F5 BigIQ
-
-The F5 Big IQ Orchestrator allows for the remote management of F5 Big IQ certificate stores.  Inventory, Management, and Reenrollment functions are supported.
-
-#### Integration status: Production - Ready for use in production environments.
-
-## About the Keyfactor Universal Orchestrator Extension
-
-This repository contains a Universal Orchestrator Extension which is a plugin to the Keyfactor Universal Orchestrator. Within the Keyfactor Platform, Orchestrators are used to manage “certificate stores” &mdash; collections of certificates and roots of trust that are found within and used by various applications.
-
-The Universal Orchestrator is part of the Keyfactor software distribution and is available via the Keyfactor customer portal. For general instructions on installing Extensions, see the “Keyfactor Command Orchestrator Installation and Configuration Guide” section of the Keyfactor documentation. For configuration details of this specific Extension see below in this readme.
-
-The Universal Orchestrator is the successor to the Windows Orchestrator. This Orchestrator Extension plugin only works with the Universal Orchestrator and does not work with the Windows Orchestrator.
-
-## Support for F5 BigIQ
-
-F5 BigIQ is supported by Keyfactor for Keyfactor customers. If you have a support issue, please open a support ticket via the Keyfactor Support Portal at https://support.keyfactor.com
-
-###### To report a problem or suggest a new feature, use the **[Issues](../../issues)** tab. If you want to contribute actual bug fixes or proposed enhancements, use the **[Pull requests](../../pulls)** tab.
-
----
-
-
----
-
-
-
-## Keyfactor Version Supported
-
-The minimum version of the Keyfactor Universal Orchestrator Framework needed to run this version of the extension is 10.4
-## Platform Specific Notes
-
-The Keyfactor Universal Orchestrator may be installed on either Windows or Linux based platforms. The certificate operations supported by a capability may vary based what platform the capability is installed on. The table below indicates what capabilities are supported based on which platform the encompassing Universal Orchestrator is running.
-| Operation | Win | Linux |
-|-----|-----|------|
-|Supports Management Add|&check; |&check; |
-|Supports Management Remove|&check; |&check; |
-|Supports Create Store|  |  |
-|Supports Discovery|  |  |
-|Supports Reenrollment|&check; |&check; |
-|Supports Inventory|&check; |&check; |
-
-
-## PAM Integration
-
-This orchestrator extension has the ability to connect to a variety of supported PAM providers to allow for the retrieval of various client hosted secrets right from the orchestrator server itself.  This eliminates the need to set up the PAM integration on Keyfactor Command which may be in an environment that the client does not want to have access to their PAM provider.
-
-The secrets that this orchestrator extension supports for use with a PAM Provider are:
-
-|Name|Description|
-|----|-----------|
-|ServerUsername|The user id that will be used to authenticate to the F5 Biq API endpoints|
-|ServerPassword|The password that will be used to authenticate to the F5 Biq API endpoints|
-  
-
-It is not necessary to use a PAM Provider for all of the secrets available above. If a PAM Provider should not be used, simply enter in the actual value to be used, as normal.
-
-If a PAM Provider will be used for one of the fields above, start by referencing the [Keyfactor Integration Catalog](https://keyfactor.github.io/integrations-catalog/content/pam). The GitHub repo for the PAM Provider to be used contains important information such as the format of the `json` needed. What follows is an example but does not reflect the `json` values for all PAM Providers as they have different "instance" and "initialization" parameter names and values.
-
-<details><summary>General PAM Provider Configuration</summary>
-<p>
-
-
-
-### Example PAM Provider Setup
-
-To use a PAM Provider to resolve a field, in this example the __Server Password__ will be resolved by the `Hashicorp-Vault` provider, first install the PAM Provider extension from the [Keyfactor Integration Catalog](https://keyfactor.github.io/integrations-catalog/content/pam) on the Universal Orchestrator.
-
-Next, complete configuration of the PAM Provider on the UO by editing the `manifest.json` of the __PAM Provider__ (e.g. located at extensions/Hashicorp-Vault/manifest.json). The "initialization" parameters need to be entered here:
-
-~~~ json
-  "Keyfactor:PAMProviders:Hashicorp-Vault:InitializationInfo": {
-    "Host": "http://127.0.0.1:8200",
-    "Path": "v1/secret/data",
-    "Token": "xxxxxx"
-  }
-~~~
-
-After these values are entered, the Orchestrator needs to be restarted to pick up the configuration. Now the PAM Provider can be used on other Orchestrator Extensions.
-
-### Use the PAM Provider
-With the PAM Provider configured as an extenion on the UO, a `json` object can be passed instead of an actual value to resolve the field with a PAM Provider. Consult the [Keyfactor Integration Catalog](https://keyfactor.github.io/integrations-catalog/content/pam) for the specific format of the `json` object.
-
-To have the __Server Password__ field resolved by the `Hashicorp-Vault` provider, the corresponding `json` object from the `Hashicorp-Vault` extension needs to be copied and filed in with the correct information:
-
-~~~ json
-{"Secret":"my-kv-secret","Key":"myServerPassword"}
-~~~
-
-This text would be entered in as the value for the __Server Password__, instead of entering in the actual password. The Orchestrator will attempt to use the PAM Provider to retrieve the __Server Password__. If PAM should not be used, just directly enter in the value for the field.
+<p align="center">
+  <!-- Badges -->
+<img src="https://img.shields.io/badge/integration_status-production-3D1973?style=flat-square" alt="Integration Status: production" />
+<a href="https://github.com/Keyfactor/f5-bigiq-rest-orchestrator/releases"><img src="https://img.shields.io/github/v/release/Keyfactor/f5-bigiq-rest-orchestrator?style=flat-square" alt="Release" /></a>
+<img src="https://img.shields.io/github/issues/Keyfactor/f5-bigiq-rest-orchestrator?style=flat-square" alt="Issues" />
+<img src="https://img.shields.io/github/downloads/Keyfactor/f5-bigiq-rest-orchestrator/total?style=flat-square&label=downloads&color=28B905" alt="GitHub Downloads (all assets, all releases)" />
 </p>
-</details> 
 
-
-
-
----
-
+<p align="center">
+  <!-- TOC -->
+  <a href="#support">
+    <b>Support</b>
+  </a>
+  ·
+  <a href="#installation">
+    <b>Installation</b>
+  </a>
+  ·
+  <a href="#license">
+    <b>License</b>
+  </a>
+  ·
+  <a href="https://github.com/orgs/Keyfactor/repositories?q=orchestrator">
+    <b>Related Integrations</b>
+  </a>
+</p>
 
 ## Overview
 
@@ -114,157 +45,263 @@ Use cases NOT supported by the F5 Big IQ Orchestrator Extension:
 - Storing binding relationships in Keyfactor Command during Inventory.
 
 
-## Versioning
 
-The version number of a the F5 Big IQ Orchestrator Extension can be verified by right clicking on the F5BigIQ.dll file, selecting Properties, and then clicking on the Details tab.
+## Compatibility
 
+This integration is compatible with Keyfactor Universal Orchestrator version 10.4 and later.
 
-## F5 Big IQ Prerequisites
+## Support
+The F5 BigIQ Universal Orchestrator extension is supported by Keyfactor for Keyfactor customers. If you have a support issue, please open a support ticket with your Keyfactor representative. If you have a support issue, please open a support ticket via the Keyfactor Support Portal at https://support.keyfactor.com. 
+ 
+> To report a problem or suggest a new feature, use the **[Issues](../../issues)** tab. If you want to contribute actual bug fixes or proposed enhancements, use the **[Pull requests](../../pulls)** tab.
+
+## Requirements & Prerequisites
+
+Before installing the F5 BigIQ Universal Orchestrator extension, we recommend that you install [kfutil](https://github.com/Keyfactor/kfutil). Kfutil is a command-line tool that simplifies the process of creating store types, installing extensions, and instantiating certificate stores in Keyfactor Command.
+
 
 When creating a Keyfactor Command Certificate Store, you will be asked to enter server credentials.  These credentials will serve two purposes:
 1. They will be used to authenticate to the F5 Big IQ instance when accessing API endpoints.  Please make sure these credentials have Admin authority on F5 Big IQ.
 2. When Inventorying and Adding/Replacing certificates it will be necessary for certificate files to be transferred to and from the F5 device. The F5 Big IQ Orchestrator Extension uses SCP (Secure Copy Protocol) to perform these functions. Please make sure your F5 Big IQ device is set up to allow SCP to transfer files *to* /var/config/rest/downloads (a reserved F5 Big IQ folder used for file transfers) and *from* /var/config/rest/fileobject (the certificate file location path) and all subfolders. Other configuration tasks may be necessary in your environment to enable this feature.
 
 
-## F5 Big IQ Orchestrator Extension Installation
+## Create the F5-BigIQ Certificate Store Type
 
-1. Stop the Keyfactor Universal Orchestrator Service.
-2. In the Keyfactor Orchestrator installation folder (by convention usually C:\Program Files\Keyfactor\Keyfactor Orchestrator), find the "extensions" folder. Underneath that, create a new folder named F5BigIQ or another name of your choosing.
-3. Download the latest version of the F5 BigIQ Orchestrator Extension from [GitHub](https://github.com/Keyfactor/f5-bigiq-rest-orchestrator).
-4. Copy the contents of the download installation zip file into the folder created in step 2.
-5. Start the Keyfactor Universal Orchestrator Service.
+To use the F5 BigIQ Universal Orchestrator extension, you **must** create the F5-BigIQ Certificate Store Type. This only needs to happen _once_ per Keyfactor Command instance.
 
 
-## F5 Big IQ Orchestrator Extension Configuration
 
-### 1\. In Keyfactor Command, create a new certificate store type by navigating to Settings (the "gear" icon in the top right) => Certificate Store Types, and clicking ADD.  Then enter the following information:
+* **Create F5-BigIQ using kfutil**:
 
-<details>
-<summary><b>Basic Tab</b></summary>
+    ```shell
+    # F5 Big IQ
+    kfutil store-types create F5-BigIQ
+    ```
 
-- **Name** – Required. The descriptive display name of the new Certificate Store Type.  Suggested => F5 Big IQ
-- **Short Name** – Required. This value ***must be*** F5-BigIQ.
-- **Custom Capability** - Leave unchecked
-- **Supported Job Types** – Select Inventory, Add, and Remove.
-- **General Settings** - Select Needs Server.  Select Blueprint Allowed if you plan to use blueprinting.  Leave Uses PowerShell unchecked.
-- **Password Settings** - Leave both options unchecked
+* **Create F5-BigIQ manually in the Command UI**:
+    <details><summary>Create F5-BigIQ manually in the Command UI</summary>
 
-</details>
+    Create a store type called `F5-BigIQ` with the attributes in the tables below:
 
-<details>
-<summary><b>Advanced Tab</b></summary>
+    #### Basic Tab
+    | Attribute | Value | Description |
+    | --------- | ----- | ----- |
+    | Name | F5 Big IQ | Display name for the store type (may be customized) |
+    | Short Name | F5-BigIQ | Short display name for the store type |
+    | Capability | F5-BigIQ | Store type name orchestrator will register with. Check the box to allow entry of value |
+    | Supports Add | ✅ Checked | Check the box. Indicates that the Store Type supports Management Add |
+    | Supports Remove | ✅ Checked | Check the box. Indicates that the Store Type supports Management Remove |
+    | Supports Discovery | 🔲 Unchecked |  Indicates that the Store Type supports Discovery |
+    | Supports Reenrollment | ✅ Checked |  Indicates that the Store Type supports Reenrollment |
+    | Supports Create | 🔲 Unchecked |  Indicates that the Store Type supports store creation |
+    | Needs Server | ✅ Checked | Determines if a target server name is required when creating store |
+    | Blueprint Allowed | ✅ Checked | Determines if store type may be included in an Orchestrator blueprint |
+    | Uses PowerShell | 🔲 Unchecked | Determines if underlying implementation is PowerShell |
+    | Requires Store Password | 🔲 Unchecked | Enables users to optionally specify a store password when defining a Certificate Store. |
+    | Supports Entry Password | 🔲 Unchecked | Determines if an individual entry within a store can have a password. |
 
-- **Store Path Type** - Select Freeform
-- **Supports Custom Alias** - Required
-- **Private Key Handling** - Required
-- **PFX Password Style** - Default
+    The Basic tab should look like this:
 
-</details>
+    ![F5-BigIQ Basic Tab](docsource/images/F5-BigIQ-basic-store-type-dialog.png)
 
-<details>
-<summary><b>Custom Fields Tab</b></summary>
+    #### Advanced Tab
+    | Attribute | Value | Description |
+    | --------- | ----- | ----- |
+    | Supports Custom Alias | Required | Determines if an individual entry within a store can have a custom Alias. |
+    | Private Key Handling | Required | This determines if Keyfactor can send the private key associated with a certificate to the store. Required because IIS certificates without private keys would be invalid. |
+    | PFX Password Style | Default | 'Default' - PFX password is randomly generated, 'Custom' - PFX password may be specified when the enrollment job is created (Requires the Allow Custom Password application setting to be enabled.) |
 
-- **Deploy Certificate to Linked Big IP on Renewal** - optional - This setting determines you wish to deploy renewed certificates (Management-Add jobs with Overwrite selected) to all linked Big IP devices.  Linked devices are determined by looking at all of the client-ssl profiles that reference the renewed certificate that have an associated virtual server linked to a Big IP device.  An "immediate" deployment is then scheduled within F5 Big IQ for each linked Big IP device. 
-  - **Name**=DeployCertificateOnRenewal
-  - **Display Name**=Deploy Certificate to Linked Big IP on Renewal
-  - **Type**=Bool
-  - **Default Value**={client preference}
-  - **Depends on**=unchecked
-  - **Required**=unchecked
+    The Advanced tab should look like this:
 
-- **Ignore SSL Warning** - optional - If you use a self signed certificate for the F5 Big IQ portal, you will need add this Custom Field and set the value to True on the managed certificate store.
-  - **Name**=IgnoreSSLWarning
-  - **Display Name**=Ignore SSL Warning
-  - **Type**=Bool
-  - **Default Value**={client preference}
-  - **Depends on**=unchecked
-  - **Required**=unchecked
+    ![F5-BigIQ Advanced Tab](docsource/images/F5-BigIQ-advanced-store-type-dialog.png)
 
-- **Use Token Authentication** - optional - If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls that the integration uses, you will need to add this Custom Field and set the value to True on the managed certificate store.  If this exists and is set to True for the store, the store userid/password credentials you set for the certificate store will be used once to receive a token.  This token is then used for all remaining API calls for the duration of the job.  If this option does not exist or is set to False, the userid/password credentials you set on the certificate store will be used for each API call.
-  - **Name**=UseTokenAuth
-  - **Display Name**=Use Token Authentication
-  - **Type**=Bool
-  - **Default Value**={client preference}
-  - **Depends on**=unchecked
-  - **Required**=unchecked
+    #### Custom Fields Tab
+    Custom fields operate at the certificate store level and are used to control how the orchestrator connects to the remote target server containing the certificate store to be managed. The following custom fields should be added to the store type:
 
-- **Use Token Authentication Provider Name** - optional - If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token.  If you choose not to add this field or leave it blank on the certificate store (with no default value set), the default of "TMOS" will be used.
-  - **Name**=LoginProviderName
-  - **Display Name**=Use Token Authentication Provider Name
-  - **Type**=String
-  - **Default Value**={client preference}
-  - **Depends on**="UseTokenAuth"
-  - **Required**=unchecked   
+    | Name | Display Name | Description | Type | Default Value/Options | Required |
+    | ---- | ------------ | ---- | --------------------- | -------- | ----------- |
+    | DeployCertificateOnRenewal | Deploy Certificate to Linked Big IP on Renewal | This optional setting determines whether renewed certificates (Management-Add jobs with Overwrite selected) will be deployed to all linked Big IP devices. Linked devices are determined by looking at all of the client-ssl profiles that reference the renewed certificate that have an associated virtual server linked to a Big IP device. An immediate deployment is then scheduled within F5 Big IQ for each linked Big IP device. | Bool | false | 🔲 Unchecked |
+    | IgnoreSSLWarning | Ignore SSL Warning | If you use a self signed certificate for the F5 Big IQ portal, you will need to add this optional Custom Field and set the value to True on the managed certificate store. | Bool | false | 🔲 Unchecked |
+    | UseTokenAuth | Use Token Authentication | If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls, you will need to add this optional Custom Field and set the value to True on the managed certificate store. If set to True for the store, the userid/password credentials you set for the certificate store will be used once to receive a token. This token is then used for all subsequent API calls for the duration of the job. If this option does not exist or is set to False, the userid/password credentials you set for the certificate store will be used for all API calls. | Bool | false | 🔲 Unchecked |
+    | LoginProviderName | Authentication Provider Name | If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token. If you choose not to add this field or leave it blank on the certificate store (with no default value set), the default of "TMOS" will be used. | String |  | 🔲 Unchecked |
+    | ServerUsername | Server Username | Login credential for the F5 Big IQ device.  MUST be an Admin account. | Secret |  | 🔲 Unchecked |
+    | ServerPassword | Server Password | Login password for the F5 Big IQ device. | Secret |  | 🔲 Unchecked |
 
-Please note, after saving the store type, going back into this screen will show three additional Custom Fields: Server Username, Server Password, and Use SSL.  These are added internally by Keyfactor Command and should not be modified.
+    The Custom Fields tab should look like this:
 
-</details>
-
-<details>
-<summary><b>Entry Parameters Tab</b></summary>
-
-Entry parameters are required ONLY if you will be taking advantage of the Reenrollment (ODKG - On Device Key Generation) capability of the F5 Big IQ Orchestrator Extension.  When scheduling Reenrollment or Management jobs, some versions of Keyfactor Command may show multiple Alias and Overwrite fields.  The ones below will be used for Reenrollment while the others will be used for Management.
-
-- **Alias** - required - The identifying name of the certificate
-  - **Name**=Alias
-  - **Display Name**=Alias (Reenrollment Only)
-  - **Type**=String
-  - **Default Value**=Leave Blank
-  - **Depends On**=unchecked
-  - **Required When**=Check Reenrolling an entry
-
-- **Overwrite** - required - Allow overwriting an existing certificate when reenrolling?
-  - **Name**=Overwrite
-  - **Display Name**=Overwrite (Reenrollment Only)
-  - **Type**=Bool
-  - **Default Value**=False
-  - **Depends On**=unchecked
-  - **Required When**=Check Reenrolling an entry
-
-- **SANs** - optional - External SANs for the requested certificate.  Each SAN must be prefixed with the type (DNS: or IP:) and multiple SANs must be delimitted by an ampersand (&).  Example: DNS:server.domain.com&IP:127.0.0.1&DNS:server2.domain.com
-  - **Name**=SANs
-  - **Display Name**=SANs (Reenrollment Only)
-  - **Type**=String
-  - **Default Value**=Leave Blank
-  - **Depends On**=unchecked
-  - **Required When**=Leave all unchecked
-
-</details>
-
-### 2\. Create an F5 Big IQ Certificate Store
-
-Navigate to Certificate Locations =\> Certificate Stores within Keyfactor Command to add the store. Below are the values that should be entered:
-
-- **Category** – Required.  Select the Name you entered when creating the Certificate Store Type.  Suggested value was F5 Big IQ.
-
-- **Container** – Optional.  Select a container if utilized.
-
-- **Client Machine & Credentials** – Required.  The full URL of the F5 Big IQ device portal.  
-  
-- **Store Path** – Required.  Enter the name of the partition on the F5 Big IQ device you wish to manage.  This value is case sensitive, so if the partition name is "Common", it must be entered as "Common" and not "common".
-
-- **Orchestrator** – Required.  Select the orchestrator you wish to use to manage this store
-
-- **Deploy Certificate to Linked Big IP on Renewal** - Optional.  Set this to True if you wish to deploy renewed certificates (Management-Add jobs with Overwrite selected) to all linked Big IP devices.  Linked devices are determined by looking at all of the client-ssl profiles that reference the renewed certificate that have an associated virtual server linked to a Big IP device.  An "immediate" deployment is then scheduled within F5 Big IQ for each linked Big IP device. 
-
-- **Ignore SSL Warning** - Optional.  Set this to True if you wish to ignore SSL warnings from F5 that occur during API calls when the site does not have a trusted certificate with the proper SAN bound to it.  If you chose not to add this Custom Field when creating the Certificate Store Type, the default value of False will be assumed.  If this value is False (or missing) SSL warnings will cause errors during orchestrator extension jobs.
-
-- **Use Token Authentication** - Optional.  Set this to True if you wish to use F5 Big IQ's token authentiation instead of basic authentication for all API requests.  If you chose not to add this optional Custom Field when creating the Certificate Store Type, the default value of False will be assumed and basic authentication will be used for all API requests for all jobs.  Setting this value to True will enable an initial basic authenticated request to acquire an authentication token, which will then be used for all subsequent API requests.   
-
-- **Use Token Authentication Provider Name** - Optional - If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token.  If you choose leave this field blank, the default of "TMOS" will be used.  
+    ![F5-BigIQ Custom Fields Tab](docsource/images/F5-BigIQ-custom-fields-store-type-dialog.png)
 
 
-- **Server Username/Password** - Required.  The credentials used to log into the F5 Big IQ device to perform API calls.  These values for server login can be either:
-  
-  - UserId/Password
-  - PAM provider information used to look up the UserId/Password credentials
 
-  Please make sure these credentials have Admin rights on the F5 Big IQ device and can perform SCP functions as described in the F5 Big IQ Prerequisites section above.
+    #### Entry Parameters Tab
 
-- **Use SSL** - N/A.  This value is not referenced in the F5 Big IQ Orchestrator Extension.  The value you enter for Client Machine, and specifically whether the protocol entered is http:// or https:// will determine whether a TLS (SSL) connection is utilized.
+    | Name | Display Name | Description | Type | Default Value | Entry has a private key | Adding an entry | Removing an entry | Reenrolling an entry |
+    | ---- | ------------ | ---- | ------------- | ----------------------- | ---------------- | ----------------- | ------------------- | ----------- |
+    | Alias | Alias (Reenrollment only) | The name F5 Big IQ uses to identify the certificate | String |  | 🔲 Unchecked | 🔲 Unchecked | 🔲 Unchecked | ✅ Checked |
+    | Overwrite | Overwrite (Reenrollment only) | Allow overwriting an existing certificate when reenrolling? | Bool | False | 🔲 Unchecked | 🔲 Unchecked | 🔲 Unchecked | ✅ Checked |
+    | SANs | SANs (Reenrollment only) | External SANs for the requested certificate. Each SAN must be prefixed with the type (DNS: or IP:) and multiple SANs must be delimitted by an ampersand (&). Example: DNS:server.domain.com&IP:127.0.0.1&DNS:server2.domain.com.  This is an optional field. | String |  | 🔲 Unchecked | 🔲 Unchecked | 🔲 Unchecked | 🔲 Unchecked |
 
-- **Inventory Schedule** – Set a schedule for running Inventory jobs or "none", if you choose not to schedule Inventory at this time.
+    The Entry Parameters tab should look like this:
 
-When creating cert store type manually, that store property names and entry parameter names are case sensitive
+    ![F5-BigIQ Entry Parameters Tab](docsource/images/F5-BigIQ-entry-parameters-store-type-dialog.png)
 
 
+
+    </details>
+
+## Installation
+
+1. **Download the latest F5 BigIQ Universal Orchestrator extension from GitHub.** 
+
+    Navigate to the [F5 BigIQ Universal Orchestrator extension GitHub version page](https://github.com/Keyfactor/f5-bigiq-rest-orchestrator/releases/latest). Refer to the compatibility matrix below to determine whether the `net6.0` or `net8.0` asset should be downloaded. Then, click the corresponding asset to download the zip archive.
+    | Universal Orchestrator Version | Latest .NET version installed on the Universal Orchestrator server | `rollForward` condition in `Orchestrator.runtimeconfig.json` | `f5-bigiq-rest-orchestrator` .NET version to download |
+    | --------- | ----------- | ----------- | ----------- |
+    | Older than `11.0.0` | | | `net6.0` |
+    | Between `11.0.0` and `11.5.1` (inclusive) | `net6.0` | | `net6.0` | 
+    | Between `11.0.0` and `11.5.1` (inclusive) | `net8.0` | `Disable` | `net6.0` | 
+    | Between `11.0.0` and `11.5.1` (inclusive) | `net8.0` | `LatestMajor` | `net8.0` | 
+    | `11.6` _and_ newer | `net8.0` | | `net8.0` |
+
+    Unzip the archive containing extension assemblies to a known location.
+
+    > **Note** If you don't see an asset with a corresponding .NET version, you should always assume that it was compiled for `net6.0`.
+
+2. **Locate the Universal Orchestrator extensions directory.**
+
+    * **Default on Windows** - `C:\Program Files\Keyfactor\Keyfactor Orchestrator\extensions`
+    * **Default on Linux** - `/opt/keyfactor/orchestrator/extensions`
+    
+3. **Create a new directory for the F5 BigIQ Universal Orchestrator extension inside the extensions directory.**
+        
+    Create a new directory called `f5-bigiq-rest-orchestrator`.
+    > The directory name does not need to match any names used elsewhere; it just has to be unique within the extensions directory.
+
+4. **Copy the contents of the downloaded and unzipped assemblies from __step 2__ to the `f5-bigiq-rest-orchestrator` directory.**
+
+5. **Restart the Universal Orchestrator service.**
+
+    Refer to [Starting/Restarting the Universal Orchestrator service](https://software.keyfactor.com/Core-OnPrem/Current/Content/InstallingAgents/NetCoreOrchestrator/StarttheService.htm).
+
+
+6. **(optional) PAM Integration** 
+
+    The F5 BigIQ Universal Orchestrator extension is compatible with all supported Keyfactor PAM extensions to resolve PAM-eligible secrets. PAM extensions running on Universal Orchestrators enable secure retrieval of secrets from a connected PAM provider.
+
+    To configure a PAM provider, [reference the Keyfactor Integration Catalog](https://keyfactor.github.io/integrations-catalog/content/pam) to select an extension, and follow the associated instructions to install it on the Universal Orchestrator (remote).
+
+
+> The above installation steps can be supplimented by the [official Command documentation](https://software.keyfactor.com/Core-OnPrem/Current/Content/InstallingAgents/NetCoreOrchestrator/CustomExtensions.htm?Highlight=extensions).
+
+
+
+## Defining Certificate Stores
+
+
+
+* **Manually with the Command UI**
+
+    <details><summary>Create Certificate Stores manually in the UI</summary>
+
+    1. **Navigate to the _Certificate Stores_ page in Keyfactor Command.**
+
+        Log into Keyfactor Command, toggle the _Locations_ dropdown, and click _Certificate Stores_.
+
+    2. **Add a Certificate Store.**
+
+        Click the Add button to add a new Certificate Store. Use the table below to populate the **Attributes** in the **Add** form.
+        | Attribute | Description |
+        | --------- | ----------- |
+        | Category | Select "F5 Big IQ" or the customized certificate store name from the previous step. |
+        | Container | Optional container to associate certificate store with. |
+        | Client Machine |  |
+        | Store Path |  |
+        | Orchestrator | Select an approved orchestrator capable of managing `F5-BigIQ` certificates. Specifically, one with the `F5-BigIQ` capability. |
+        | DeployCertificateOnRenewal | This optional setting determines whether renewed certificates (Management-Add jobs with Overwrite selected) will be deployed to all linked Big IP devices. Linked devices are determined by looking at all of the client-ssl profiles that reference the renewed certificate that have an associated virtual server linked to a Big IP device. An immediate deployment is then scheduled within F5 Big IQ for each linked Big IP device. |
+        | IgnoreSSLWarning | If you use a self signed certificate for the F5 Big IQ portal, you will need to add this optional Custom Field and set the value to True on the managed certificate store. |
+        | UseTokenAuth | If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls, you will need to add this optional Custom Field and set the value to True on the managed certificate store. If set to True for the store, the userid/password credentials you set for the certificate store will be used once to receive a token. This token is then used for all subsequent API calls for the duration of the job. If this option does not exist or is set to False, the userid/password credentials you set for the certificate store will be used for all API calls. |
+        | LoginProviderName | If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token. If you choose not to add this field or leave it blank on the certificate store (with no default value set), the default of "TMOS" will be used. |
+        | ServerUsername | Login credential for the F5 Big IQ device.  MUST be an Admin account. |
+        | ServerPassword | Login password for the F5 Big IQ device. |
+
+
+        
+
+        <details><summary>Attributes eligible for retrieval by a PAM Provider on the Universal Orchestrator</summary>
+
+        If a PAM provider was installed _on the Universal Orchestrator_ in the [Installation](#Installation) section, the following parameters can be configured for retrieval _on the Universal Orchestrator_.
+        | Attribute | Description |
+        | --------- | ----------- |
+        | ServerUsername | Login credential for the F5 Big IQ device.  MUST be an Admin account. |
+        | ServerPassword | Login password for the F5 Big IQ device. |
+
+
+        Please refer to the **Universal Orchestrator (remote)** usage section ([PAM providers on the Keyfactor Integration Catalog](https://keyfactor.github.io/integrations-catalog/content/pam)) for your selected PAM provider for instructions on how to load attributes orchestrator-side.
+
+        > Any secret can be rendered by a PAM provider _installed on the Keyfactor Command server_. The above parameters are specific to attributes that can be fetched by an installed PAM provider running on the Universal Orchestrator server itself. 
+        </details>
+        
+
+    </details>
+
+* **Using kfutil**
+    
+    <details><summary>Create Certificate Stores with kfutil</summary>
+    
+    1. **Generate a CSV template for the F5-BigIQ certificate store**
+
+        ```shell
+        kfutil stores import generate-template --store-type-name F5-BigIQ --outpath F5-BigIQ.csv
+        ```
+    2. **Populate the generated CSV file**
+
+        Open the CSV file, and reference the table below to populate parameters for each **Attribute**.
+        | Attribute | Description |
+        | --------- | ----------- |
+        | Category | Select "F5 Big IQ" or the customized certificate store name from the previous step. |
+        | Container | Optional container to associate certificate store with. |
+        | Client Machine |  |
+        | Store Path |  |
+        | Orchestrator | Select an approved orchestrator capable of managing `F5-BigIQ` certificates. Specifically, one with the `F5-BigIQ` capability. |
+        | DeployCertificateOnRenewal | This optional setting determines whether renewed certificates (Management-Add jobs with Overwrite selected) will be deployed to all linked Big IP devices. Linked devices are determined by looking at all of the client-ssl profiles that reference the renewed certificate that have an associated virtual server linked to a Big IP device. An immediate deployment is then scheduled within F5 Big IQ for each linked Big IP device. |
+        | IgnoreSSLWarning | If you use a self signed certificate for the F5 Big IQ portal, you will need to add this optional Custom Field and set the value to True on the managed certificate store. |
+        | UseTokenAuth | If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls, you will need to add this optional Custom Field and set the value to True on the managed certificate store. If set to True for the store, the userid/password credentials you set for the certificate store will be used once to receive a token. This token is then used for all subsequent API calls for the duration of the job. If this option does not exist or is set to False, the userid/password credentials you set for the certificate store will be used for all API calls. |
+        | LoginProviderName | If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token. If you choose not to add this field or leave it blank on the certificate store (with no default value set), the default of "TMOS" will be used. |
+        | ServerUsername | Login credential for the F5 Big IQ device.  MUST be an Admin account. |
+        | ServerPassword | Login password for the F5 Big IQ device. |
+
+
+        
+
+        <details><summary>Attributes eligible for retrieval by a PAM Provider on the Universal Orchestrator</summary>
+
+        If a PAM provider was installed _on the Universal Orchestrator_ in the [Installation](#Installation) section, the following parameters can be configured for retrieval _on the Universal Orchestrator_.
+        | Attribute | Description |
+        | --------- | ----------- |
+        | ServerUsername | Login credential for the F5 Big IQ device.  MUST be an Admin account. |
+        | ServerPassword | Login password for the F5 Big IQ device. |
+
+
+        > Any secret can be rendered by a PAM provider _installed on the Keyfactor Command server_. The above parameters are specific to attributes that can be fetched by an installed PAM provider running on the Universal Orchestrator server itself. 
+        </details>
+        
+
+    3. **Import the CSV file to create the certificate stores** 
+
+        ```shell
+        kfutil stores import csv --store-type-name F5-BigIQ --file F5-BigIQ.csv
+        ```
+    </details>
+
+> The content in this section can be supplimented by the [official Command documentation](https://software.keyfactor.com/Core-OnPrem/Current/Content/ReferenceGuide/Certificate%20Stores.htm?Highlight=certificate%20store).
+
+
+
+
+
+## License
+
+Apache License 2.0, see [LICENSE](LICENSE).
+
+## Related Integrations
+
+See all [Keyfactor Universal Orchestrator extensions](https://github.com/orgs/Keyfactor/repositories?q=orchestrator).

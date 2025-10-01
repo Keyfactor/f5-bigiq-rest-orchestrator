@@ -1,3 +1,6 @@
+v1.2.1
+- Bug Fix: Remove logic to replace "localhost" with F5 base URL for cert/key references during certificate replacement
+
 v1.2.0 
 - Documentation updated to use doctool and dual build for .net6/8.
 

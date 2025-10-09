@@ -190,8 +190,8 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                 Partition = this.Partition,
                 Password = password,
                 Command = f5Certificate.TotalItems == 1 ? $"REPLACE_{fileType.ToString()}" : $"ADD_{fileType.ToString()}",
-                CertReference = (f5Certificate.TotalItems == 1 ? new F5FileReference() { Link = f5Certificate.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null),
-                KeyReference = (f5Certificate.TotalItems == 1 ? new F5FileReference() { Link = f5Key.Items[0].Link.Replace(LOCAL_URL_VALUE, BaseUrl) } : null)
+                CertReference = (f5Certificate.TotalItems == 1 ? new F5FileReference() { Link = f5Certificate.Items[0].Link } : null),
+                KeyReference = (f5Certificate.TotalItems == 1 ? new F5FileReference() { Link = f5Key.Items[0].Link } : null)
             };
 
             RestRequest request = new RestRequest(POST_ENDPOINT, Method.Post);

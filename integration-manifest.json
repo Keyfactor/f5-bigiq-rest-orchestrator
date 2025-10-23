@@ -94,53 +94,7 @@
                             "Description": "Login password for the F5 Big IQ device."
                         }
                     ],
-                    "EntryParameters": [
-                        {
-                            "Name": "Alias",
-                            "DisplayName": "Alias (Reenrollment only)",
-                            "Type": "String",
-                            "RequiredWhen": {
-                                "HasPrivateKey": false,
-                                "OnAdd": false,
-                                "OnRemove": false,
-                                "OnReenrollment": true
-                            },
-                            "DependsOn": "",
-                            "DefaultValue": "",
-                            "Options": "",
-                            "Description": "The name F5 Big IQ uses to identify the certificate"
-                        },
-                        {
-                            "Name": "Overwrite",
-                            "DisplayName": "Overwrite (Reenrollment only)",
-                            "Type": "Bool",
-                            "RequiredWhen": {
-                                "HasPrivateKey": false,
-                                "OnAdd": false,
-                                "OnRemove": false,
-                                "OnReenrollment": true
-                            },
-                            "DependsOn": "",
-                            "DefaultValue": "False",
-                            "Options": "",
-                            "Description": "Allow overwriting an existing certificate when reenrolling?"
-                        },
-                        {
-                            "Name": "SANs",
-                            "DisplayName": "SANs (Reenrollment only)",
-                            "Type": "String",
-                            "RequiredWhen": {
-                                "HasPrivateKey": false,
-                                "OnAdd": false,
-                                "OnRemove": false,
-                                "OnReenrollment": false
-                            },
-                            "DependsOn": "",
-                            "DefaultValue": "",
-                            "Options": "",
-                            "Description": "External SANs for the requested certificate. Each SAN must be prefixed with the type (DNS: or IP:) and multiple SANs must be delimitted by an ampersand (&). Example: DNS:server.domain.com&IP:127.0.0.1&DNS:server2.domain.com.  This is an optional field."
-                        }
-                    ]
+                    "EntryParameters": []
                 }
             ]
         }

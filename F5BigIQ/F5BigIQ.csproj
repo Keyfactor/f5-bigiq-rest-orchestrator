@@ -9,10 +9,14 @@
 
   <ItemGroup>
     <PackageReference Include="Keyfactor.Logging" Version="1.1.1" />
-    <PackageReference Include="Keyfactor.Orchestrators.IOrchestratorJobExtensions" Version="0.7.0" />
+    <PackageReference Include="Keyfactor.Orchestrators.IOrchestratorJobExtensions" Version="1.0.0" />
     <PackageReference Include="Keyfactor.PKI" Version="5.5.0" />
-    <PackageReference Include="RestSharp" Version="110.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="RestSharp" Version="112.1.0" />
     <PackageReference Include="SSH.NET" Version="2024.0.0" />
+    <Reference Include="Keyfactor.Orchestrators.IOrchestratorJobExtensions">
+      <HintPath>External References\Keyfactor.Orchestrators.IOrchestratorJobExtensions.dll</HintPath>
+    </Reference>
 
     <None Update="manifest.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

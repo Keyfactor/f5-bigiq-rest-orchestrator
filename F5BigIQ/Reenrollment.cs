@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using System.Security.Cryptography.X509Certificates;
 
 using Keyfactor.Logging;
@@ -19,6 +20,8 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Org.BouncyCastle.X509;
 using System.Text;
+using Microsoft.Win32.SafeHandles;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
@@ -40,7 +43,7 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             {
                 logger.LogDebug($"    {keyValue.Key}: {keyValue.Value}");
             }
-           
+            
             dynamic properties = JsonConvert.DeserializeObject(config.CertificateStoreDetails.Properties);
 
             SetPAMSecrets(config.ServerUsername, config.ServerPassword, logger);
@@ -53,27 +56,39 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             string keyType = !config.JobProperties.ContainsKey("keyType") || config.JobProperties["keyType"] == null || string.IsNullOrEmpty(config.JobProperties["keyType"].ToString()) ? string.Empty : config.JobProperties["keyType"].ToString();
             int? keySize = !config.JobProperties.ContainsKey("keySize") || config.JobProperties["keySize"] == null || string.IsNullOrEmpty(config.JobProperties["keySize"].ToString()) ? null : Convert.ToInt32(config.JobProperties["keySize"]);
             string subjectText = !config.JobProperties.ContainsKey("subjectText") || config.JobProperties["subjectText"] == null || config.JobProperties["subjectText"] == null || string.IsNullOrEmpty(config.JobProperties["subjectText"].ToString()) ? string.Empty : config.JobProperties["subjectText"].ToString();
-            string sans = !config.JobProperties.ContainsKey("SANs") || config.JobProperties["SANs"] == null || string.IsNullOrEmpty(config.JobProperties["SANs"].ToString()) ? string.Empty : config.JobProperties["SANs"].ToString();
-            if (!config.JobProperties.ContainsKey("Alias") || config.JobProperties["Alias"] == null || config.JobProperties["Alias"] == null || string.IsNullOrEmpty(config.JobProperties["Alias"].ToString()))
+            if (string.IsNullOrEmpty(config.Alias))
             {
-                string errorMessage = "Error performing reenrollment.  Alias blank or does not exist.";
+                string errorMessage = "Error performing reenrollment.  Alias is required.";
                 logger.LogError(errorMessage);
                 return new JobResult() { Result = OrchestratorJobStatusJobResult.Failure, JobHistoryId = config.JobHistoryId, FailureMessage = $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}: {errorMessage}"};
             }
-            string alias = config.JobProperties["Alias"].ToString();
-            bool overwrite = !config.JobProperties.ContainsKey("Overwrite") || config.JobProperties["Overwrite"] == null || string.IsNullOrEmpty(config.JobProperties["Overwrite"].ToString()) ? false : Convert.ToBoolean(config.JobProperties["Overwrite"]);
 
             try
             {
                 F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.CertificateStoreDetails.StorePath, ServerUserName, ServerPassword, loginProviderName, useTokenAuthentication, ignoreSSLWarning);
 
-                int totalKeys = f5Client.GetKeyByName(alias).TotalItems;
-                if (!overwrite && totalKeys > 0)
+                int totalKeys = f5Client.GetKeyByName(config.Alias).TotalItems;
+                if (!config.Overwrite && totalKeys > 0)
                 {
-                    throw new Exception($"Alias {alias} already exists, but Overwrite is set to False.  Overwrite must be set to True if you wish to perform reenrollment on an existing alias.");
+                    throw new Exception($"Alias {config.Alias} already exists, but Overwrite is set to False.  Overwrite must be set to True if you wish to perform reenrollment on an existing alias.");
                 }
 
-                string csr = f5Client.GenerateCSR(alias, totalKeys > 0, subjectText, keyType, keySize, sans);
+                string sans = string.Empty;
+                if (config.SANs.Count > 0)
+                {
+                    foreach(KeyValuePair<string, string[]> keyValue in config.SANs)
+                    {
+                        string key = keyValue.Key.Replace("ip4", "ip", StringComparison.OrdinalIgnoreCase).Replace("ip6", "ip", StringComparison.OrdinalIgnoreCase).Replace("upn", "uri", StringComparison.OrdinalIgnoreCase);
+                        foreach (string value in keyValue.Value)
+                        {
+                            sans += (key + ":" + value + ",");
+                        }
+                    }
+                    if (sans.Length > 0)
+                        sans = sans.Substring(0, sans.Length - 1);
+                }
+
+                string csr = f5Client.GenerateCSR(config.Alias, totalKeys > 0, subjectText, keyType, keySize, sans);
 
                 X509Certificate2 cert = submitReenrollment.Invoke(csr);
                 if (cert == null)
@@ -87,8 +102,8 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 
                 try
                 {
-                    f5Client.AddReplaceBindCertificate(alias, Convert.ToBase64String(pemBytes), 
-                        string.Empty, overwrite, deployCertificateOnRenewal, F5BigIQClient.CERT_FILE_TYPE_TO_ADD.CERT);
+                    f5Client.AddReplaceBindCertificate(config.Alias, Convert.ToBase64String(pemBytes), 
+                        string.Empty, config.Overwrite, deployCertificateOnRenewal, F5BigIQClient.CERT_FILE_TYPE_TO_ADD.CERT);
                 }
                 catch (F5BigIQException ex)
                 {

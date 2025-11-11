@@ -169,6 +169,18 @@ the Keyfactor Command Portal
 
    ![F5-BigIQ Custom Fields Tab](docsource/images/F5-BigIQ-custom-fields-store-type-dialog.png)
 
+   ##### Entry Parameters Tab
+
+   | Name | Display Name | Description | Type | Default Value | Entry has a private key | Adding an entry | Removing an entry | Reenrolling an entry |
+   | ---- | ------------ | ---- | ------------- | ----------------------- | ---------------- | ----------------- | ------------------- | ----------- |
+   | Alias | Alias (Reenrollment only) | The name F5 Big IQ uses to identify the certificate | String |  | 🔲 Unchecked | 🔲 Unchecked | 🔲 Unchecked | ✅ Checked |
+   | Overwrite | Overwrite (Reenrollment only) | Allow overwriting an existing certificate when reenrolling? | Bool | False | 🔲 Unchecked | 🔲 Unchecked | 🔲 Unchecked | ✅ Checked |
+   | SANs | SANs (Reenrollment only) | External SANs for the requested certificate. Each SAN must be prefixed with the type (DNS: or IP:) and multiple SANs must be delimitted by an ampersand (&). Example: DNS:server.domain.com&IP:127.0.0.1&DNS:server2.domain.com.  This is an optional field. | String |  | 🔲 Unchecked | 🔲 Unchecked | 🔲 Unchecked | 🔲 Unchecked |
+
+   The Entry Parameters tab should look like this:
+
+   ![F5-BigIQ Entry Parameters Tab](docsource/images/F5-BigIQ-entry-parameters-store-type-dialog.png)
+
    </details>
 
 ## Installation

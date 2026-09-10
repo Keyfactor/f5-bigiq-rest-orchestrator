@@ -1,3 +1,7 @@
+v2.1.0
+- Allow Inventory jobs to continue if one or more certificates fail to be retrieved from F5.  Failed certs will be logged in the job log as warnings, and the job will finish with a warning status.
+- Add .net10 build
+
 v2.0.0
 - Modify ODKG (Reenrollment) functionality to make use of the Keyfactor Command/UO 25.3 functionality to support SANs, Alias, and Overwrite indicator.  Entry parameters SANs, Alias, and Overwrite will no longer be supported.
 

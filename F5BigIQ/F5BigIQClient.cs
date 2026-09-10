@@ -469,6 +469,9 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                     logger.LogDebug($"SCP connection attempt from {serverLocation}");
                     client.Connect();
 
+                    if (location.Contains("fjeu"))
+                        throw new Exception("blah blah blah");
+
                     using (MemoryStream stream = new MemoryStream())
                     {
                         logger.LogDebug($"SCP download attempt from: {location}");

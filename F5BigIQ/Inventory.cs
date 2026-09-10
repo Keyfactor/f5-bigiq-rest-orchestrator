@@ -9,13 +9,14 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 
+using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
 using Keyfactor.Logging;
 using Keyfactor.Orchestrators.Extensions;
-using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
+using Keyfactor.Orchestrators.Extensions.Interfaces;
+using Keyfactor.Orchestrators.Common.Enums;
 
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Keyfactor.Orchestrators.Extensions.Interfaces;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
@@ -33,6 +34,9 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             logger.LogDebug($"Server: {config.CertificateStoreDetails.ClientMachine}");
             logger.LogDebug($"Store Path: {config.CertificateStoreDetails.StorePath}");
             logger.LogDebug($"Job Properties:");
+
+            bool hasErrors = false;
+
             foreach (KeyValuePair<string, object> keyValue in config.JobProperties ?? new Dictionary<string, object>())
             {
                 logger.LogDebug($"    {keyValue.Key}: {keyValue.Value}");
@@ -59,21 +63,29 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                         continue;
                     }
 
-                    X509Certificate2Collection certChain = f5Client.GetCertificateByLink(certItem.FileReference.Link);
-                    List<string> certContents = new List<string>();
-                    bool useChainLevel = certChain.Count > 1;
-                    foreach (X509Certificate2 certificate in certChain)
+                    try
                     {
-                        certContents.Add(Convert.ToBase64String(certificate.Export(X509ContentType.Cert)));
+                        X509Certificate2Collection certChain = f5Client.GetCertificateByLink(certItem.FileReference.Link);
+                        List<string> certContents = new List<string>();
+                        bool useChainLevel = certChain.Count > 1;
+                        foreach (X509Certificate2 certificate in certChain)
+                        {
+                            certContents.Add(Convert.ToBase64String(certificate.Export(X509ContentType.Cert)));
+                        }
+                        inventoryItems.Add(new CurrentInventoryItem()
+                        {
+                            Alias = certItem.Alias,
+                            Certificates = certContents.ToArray(),
+                            ItemStatus = Orchestrators.Common.Enums.OrchestratorInventoryItemStatus.Unknown,
+                            UseChainLevel = useChainLevel,
+                            PrivateKeyEntry = true
+                        });
                     }
-                    inventoryItems.Add(new CurrentInventoryItem()
+                    catch (Exception ex)
                     {
-                        Alias = certItem.Alias,
-                        Certificates = certContents.ToArray(),
-                        ItemStatus = Orchestrators.Common.Enums.OrchestratorInventoryItemStatus.Unknown,
-                        UseChainLevel = useChainLevel,
-                        PrivateKeyEntry = true
-                    });
+                        hasErrors = true;
+                        logger.LogError($"Exception retrieving certificate for {certItem.Alias}: {F5BigIQException.FlattenExceptionMessages(ex, string.Empty)}");
+                    }
                 }
             }
             catch (Exception ex)
@@ -86,13 +98,13 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             {
                 logger.LogDebug($"Submitting {inventoryItems.Count.ToString()} certificates");
                 submitInventory.Invoke(inventoryItems);
-                return new JobResult() { Result = Keyfactor.Orchestrators.Common.Enums.OrchestratorJobStatusJobResult.Success, JobHistoryId = config.JobHistoryId };
+                return new JobResult() { Result = hasErrors ? OrchestratorJobStatusJobResult.Warning : OrchestratorJobStatusJobResult.Success, JobHistoryId = config.JobHistoryId, FailureMessage = hasErrors ? "One or more certificates were unable to be read.  Please refer to the orchestrator log for more details." : string.Empty };
             }
             catch (Exception ex)
             {
                 string errorMessage = F5BigIQException.FlattenExceptionMessages(ex, string.Empty);
                 logger.LogError($"Exception returning certificates for {config.Capability}: {errorMessage} for job id {config.JobId}");
-                return new JobResult() { Result = Keyfactor.Orchestrators.Common.Enums.OrchestratorJobStatusJobResult.Failure, JobHistoryId = config.JobHistoryId, FailureMessage = F5BigIQException.FlattenExceptionMessages(ex, $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}:") };
+                return new JobResult() { Result = OrchestratorJobStatusJobResult.Failure, JobHistoryId = config.JobHistoryId, FailureMessage = F5BigIQException.FlattenExceptionMessages(ex, $"Site {config.CertificateStoreDetails.StorePath} on server {config.CertificateStoreDetails.ClientMachine}:") };
             }
         }
     }

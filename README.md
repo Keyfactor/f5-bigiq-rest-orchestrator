@@ -169,17 +169,60 @@ the Keyfactor Command Portal
 
    ![F5-BigIQ Custom Fields Tab](docsource/images/F5-BigIQ-custom-fields-store-type-dialog.png)
 
-   ##### Entry Parameters Tab
 
-   | Name | Display Name | Description | Type | Default Value | Entry has a private key | Adding an entry | Removing an entry | Reenrolling an entry |
-   | ---- | ------------ | ---- | ------------- | ----------------------- | ---------------- | ----------------- | ------------------- | ----------- |
-   | Alias | Alias (Reenrollment only) | The name F5 Big IQ uses to identify the certificate | String |  | 🔲 Unchecked | 🔲 Unchecked | 🔲 Unchecked | ✅ Checked |
-   | Overwrite | Overwrite (Reenrollment only) | Allow overwriting an existing certificate when reenrolling? | Bool | False | 🔲 Unchecked | 🔲 Unchecked | 🔲 Unchecked | ✅ Checked |
-   | SANs | SANs (Reenrollment only) | External SANs for the requested certificate. Each SAN must be prefixed with the type (DNS: or IP:) and multiple SANs must be delimitted by an ampersand (&). Example: DNS:server.domain.com&IP:127.0.0.1&DNS:server2.domain.com.  This is an optional field. | String |  | 🔲 Unchecked | 🔲 Unchecked | 🔲 Unchecked | 🔲 Unchecked |
+   ###### Deploy Certificate to Linked Big IP on Renewal
+   This optional setting determines whether renewed certificates (Management-Add jobs with Overwrite selected) will be deployed to all linked Big IP devices. Linked devices are determined by looking at all of the client-ssl profiles that reference the renewed certificate that have an associated virtual server linked to a Big IP device. An immediate deployment is then scheduled within F5 Big IQ for each linked Big IP device.
 
-   The Entry Parameters tab should look like this:
+   ![F5-BigIQ Custom Field - DeployCertificateOnRenewal](docsource/images/F5-BigIQ-custom-field-DeployCertificateOnRenewal-dialog.png)
+   ![F5-BigIQ Custom Field - DeployCertificateOnRenewal](docsource/images/F5-BigIQ-custom-field-DeployCertificateOnRenewal-validation-options-dialog.png)
 
-   ![F5-BigIQ Entry Parameters Tab](docsource/images/F5-BigIQ-entry-parameters-store-type-dialog.png)
+
+
+   ###### Ignore SSL Warning
+   If you use a self signed certificate for the F5 Big IQ portal, you will need to add this optional Custom Field and set the value to True on the managed certificate store.
+
+   ![F5-BigIQ Custom Field - IgnoreSSLWarning](docsource/images/F5-BigIQ-custom-field-IgnoreSSLWarning-dialog.png)
+   ![F5-BigIQ Custom Field - IgnoreSSLWarning](docsource/images/F5-BigIQ-custom-field-IgnoreSSLWarning-validation-options-dialog.png)
+
+
+
+   ###### Use Token Authentication
+   If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls, you will need to add this optional Custom Field and set the value to True on the managed certificate store. If set to True for the store, the userid/password credentials you set for the certificate store will be used once to receive a token. This token is then used for all subsequent API calls for the duration of the job. If this option does not exist or is set to False, the userid/password credentials you set for the certificate store will be used for all API calls.
+
+   ![F5-BigIQ Custom Field - UseTokenAuth](docsource/images/F5-BigIQ-custom-field-UseTokenAuth-dialog.png)
+   ![F5-BigIQ Custom Field - UseTokenAuth](docsource/images/F5-BigIQ-custom-field-UseTokenAuth-validation-options-dialog.png)
+
+
+
+   ###### Authentication Provider Name
+   If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token. If you choose not to add this field or leave it blank on the certificate store (with no default value set), the default of "TMOS" will be used.
+
+   ![F5-BigIQ Custom Field - LoginProviderName](docsource/images/F5-BigIQ-custom-field-LoginProviderName-dialog.png)
+   ![F5-BigIQ Custom Field - LoginProviderName](docsource/images/F5-BigIQ-custom-field-LoginProviderName-validation-options-dialog.png)
+
+
+
+   ###### Server Username
+   Login credential for the F5 Big IQ device.  MUST be an Admin account.
+
+
+   > [!IMPORTANT]
+   > This field is created by the `Needs Server` on the Basic tab, do not create this field manually.
+
+
+
+
+   ###### Server Password
+   Login password for the F5 Big IQ device.
+
+
+   > [!IMPORTANT]
+   > This field is created by the `Needs Server` on the Basic tab, do not create this field manually.
+
+
+
+
+
 
    </details>
 
@@ -187,15 +230,14 @@ the Keyfactor Command Portal
 
 1. **Download the latest F5 BigIQ Universal Orchestrator extension from GitHub.**
 
-    Navigate to the [F5 BigIQ Universal Orchestrator extension GitHub version page](https://github.com/Keyfactor/f5-bigiq-rest-orchestrator/releases/latest). Refer to the compatibility matrix below to determine whether the `net6.0` or `net8.0` asset should be downloaded. Then, click the corresponding asset to download the zip archive.
+    Navigate to the [F5 BigIQ Universal Orchestrator extension GitHub version page](https://github.com/Keyfactor/f5-bigiq-rest-orchestrator/releases/latest). Refer to the compatibility matrix below to determine the asset should be downloaded. Then, click the corresponding asset to download the zip archive.
 
    | Universal Orchestrator Version | Latest .NET version installed on the Universal Orchestrator server | `rollForward` condition in `Orchestrator.runtimeconfig.json` | `f5-bigiq-rest-orchestrator` .NET version to download |
    | --------- | ----------- | ----------- | ----------- |
    | Older than `11.0.0` | | | `net6.0` |
    | Between `11.0.0` and `11.5.1` (inclusive) | `net6.0` | | `net6.0` |
-   | Between `11.0.0` and `11.5.1` (inclusive) | `net8.0` | `Disable` | `net6.0` |
-   | Between `11.0.0` and `11.5.1` (inclusive) | `net8.0` | `LatestMajor` | `net8.0` |
-   | `11.6` _and_ newer | `net8.0` | | `net8.0` |
+   | Between `11.0.0` and `11.5.1` (inclusive) | `net8.0` | `Disable` | `net6.0` || Between `11.0.0` and `11.5.1` (inclusive) | `net8.0` | `LatestMajor` | `net8.0` |
+   | `11.6` _and_ newer | `net8.0` | | `net8.0` | 
 
     Unzip the archive containing extension assemblies to a known location.
 

@@ -54,38 +54,24 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             {
                 F5BigIQClient f5Client = new F5BigIQClient(config.CertificateStoreDetails.ClientMachine, config.CertificateStoreDetails.StorePath, ServerUserName, ServerPassword, loginProviderName, useTokenAuthentication, ignoreSSLWarning);
                 List<F5CertificateItem> certItems =  f5Client.GetCertificates();
-                foreach (F5CertificateItem certItem in certItems)
-                {
-                    logger.LogDebug($"Retrieving Alias {certItem.Alias}, item {(certItems.IndexOf(certItem) + 1).ToString()} of {certItems.Count.ToString()}");
-                    if (certItem.FileReference == null)
-                    {
-                        logger.LogDebug($"No file reference found for {certItem.Alias}");
-                        continue;
-                    }
 
-                    try
+                List<(string, X509Certificate2Collection)> certChains = f5Client.GetCertificateLinks(certItems, out hasErrors);
+                foreach ((string alias, X509Certificate2Collection certChain) in certChains)
+                {
+                    List<string> certContents = new List<string>();
+                    bool useChainLevel = certChain.Count > 1;
+                    foreach (X509Certificate2 certificate in certChain)
                     {
-                        X509Certificate2Collection certChain = f5Client.GetCertificateByLink(certItem.FileReference.Link);
-                        List<string> certContents = new List<string>();
-                        bool useChainLevel = certChain.Count > 1;
-                        foreach (X509Certificate2 certificate in certChain)
-                        {
-                            certContents.Add(Convert.ToBase64String(certificate.Export(X509ContentType.Cert)));
-                        }
-                        inventoryItems.Add(new CurrentInventoryItem()
-                        {
-                            Alias = certItem.Alias,
-                            Certificates = certContents.ToArray(),
-                            ItemStatus = Orchestrators.Common.Enums.OrchestratorInventoryItemStatus.Unknown,
-                            UseChainLevel = useChainLevel,
-                            PrivateKeyEntry = true
-                        });
+                        certContents.Add(Convert.ToBase64String(certificate.Export(X509ContentType.Cert)));
                     }
-                    catch (Exception ex)
+                    inventoryItems.Add(new CurrentInventoryItem()
                     {
-                        hasErrors = true;
-                        logger.LogError($"Exception retrieving certificate for {certItem.Alias}: {F5BigIQException.FlattenExceptionMessages(ex, string.Empty)}");
-                    }
+                        Alias = alias,
+                        Certificates = certContents.ToArray(),
+                        ItemStatus = Orchestrators.Common.Enums.OrchestratorInventoryItemStatus.Unknown,
+                        UseChainLevel = useChainLevel,
+                        PrivateKeyEntry = true
+                    });
                 }
             }
             catch (Exception ex)

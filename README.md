@@ -166,24 +166,28 @@ the Keyfactor Command Portal
    This optional setting determines whether renewed certificates (Management-Add jobs with Overwrite selected) will be deployed to all linked Big IP devices. Linked devices are determined by looking at all of the client-ssl profiles that reference the renewed certificate that have an associated virtual server linked to a Big IP device. An immediate deployment is then scheduled within F5 Big IQ for each linked Big IP device.
 
    ![F5-BigIQ Custom Field - DeployCertificateOnRenewal](docsource/images/F5-BigIQ-custom-field-DeployCertificateOnRenewal-dialog.svg)
+   ![F5-BigIQ Custom Field - DeployCertificateOnRenewal](docsource/images/F5-BigIQ-custom-field-DeployCertificateOnRenewal-validation-options-dialog.svg)
 
 
    ###### Ignore SSL Warning
    If you use a self signed certificate for the F5 Big IQ portal, you will need to add this optional Custom Field and set the value to True on the managed certificate store.
 
    ![F5-BigIQ Custom Field - IgnoreSSLWarning](docsource/images/F5-BigIQ-custom-field-IgnoreSSLWarning-dialog.svg)
+   ![F5-BigIQ Custom Field - IgnoreSSLWarning](docsource/images/F5-BigIQ-custom-field-IgnoreSSLWarning-validation-options-dialog.svg)
 
 
    ###### Use Token Authentication
    If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls, you will need to add this optional Custom Field and set the value to True on the managed certificate store. If set to True for the store, the userid/password credentials you set for the certificate store will be used once to receive a token. This token is then used for all subsequent API calls for the duration of the job. If this option does not exist or is set to False, the userid/password credentials you set for the certificate store will be used for all API calls.
 
    ![F5-BigIQ Custom Field - UseTokenAuth](docsource/images/F5-BigIQ-custom-field-UseTokenAuth-dialog.svg)
+   ![F5-BigIQ Custom Field - UseTokenAuth](docsource/images/F5-BigIQ-custom-field-UseTokenAuth-validation-options-dialog.svg)
 
 
    ###### Authentication Provider Name
    If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token. If you choose not to add this field or leave it blank on the certificate store (with no default value set), the default of "TMOS" will be used.
 
    ![F5-BigIQ Custom Field - LoginProviderName](docsource/images/F5-BigIQ-custom-field-LoginProviderName-dialog.svg)
+   ![F5-BigIQ Custom Field - LoginProviderName](docsource/images/F5-BigIQ-custom-field-LoginProviderName-validation-options-dialog.svg)
 
 
    ###### Server Username

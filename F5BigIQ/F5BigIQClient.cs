@@ -131,34 +131,36 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             hasErrors = false;
             List<(string, X509Certificate2Collection)> certCollections = new List<(string, X509Certificate2Collection)>();
 
-            foreach (F5CertificateItem certItem in certItems)
+            string serverLocation = BaseUrl.Replace("https://", String.Empty);
+            KeyboardInteractiveAuthenticationMethod keyboardAuthentication = new KeyboardInteractiveAuthenticationMethod(UserId);
+            keyboardAuthentication.AuthenticationPrompt += KeyboardAuthentication_AuthenticationPrompt;
+            ConnectionInfo connectionInfo = new ConnectionInfo(serverLocation, UserId, keyboardAuthentication);
+
+            using (ScpClient client = new ScpClient(connectionInfo))
             {
-                logger.LogDebug($"Retrieving Alias {certItem.Alias}, item {(certItems.IndexOf(certItem) + 1).ToString()} of {certItems.Count.ToString()}");
-                if (certItem.FileReference == null)
+                logger.LogDebug($"SCP connection attempt from {serverLocation}");
+                client.OperationTimeout = System.TimeSpan.FromSeconds(60);
+                client.Connect();
+
+                foreach (F5CertificateItem certItem in certItems)
                 {
-                    logger.LogDebug($"No file reference found for {certItem.Alias}");
-                    continue;
-                }
+                    logger.LogDebug($"Retrieving Alias {certItem.Alias}, item {(certItems.IndexOf(certItem) + 1).ToString()} of {certItems.Count.ToString()}");
+                    if (certItem.FileReference == null)
+                    {
+                        logger.LogDebug($"No file reference found for {certItem.Alias}");
+                        continue;
+                    }
 
-                string fileLocation = string.Empty;
-                RestRequest request = new RestRequest(certItem.FileReference.Link.Replace(LOCAL_URL_VALUE, BaseUrl), Method.Get);
+                    string fileLocation = string.Empty;
+                    RestRequest request = new RestRequest(certItem.FileReference.Link.Replace(LOCAL_URL_VALUE, BaseUrl), Method.Get);
 
-                JObject json = SubmitRequest(request);
-                string certificateLocation = JsonConvert.DeserializeObject<F5CertificateLocation>(json.ToString()).CertificateLocation;
+                    JObject json = SubmitRequest(request);
+                    string certificateLocation = JsonConvert.DeserializeObject<F5CertificateLocation>(json.ToString()).CertificateLocation;
 
-                KeyboardInteractiveAuthenticationMethod keyboardAuthentication = new KeyboardInteractiveAuthenticationMethod(UserId);
-                keyboardAuthentication.AuthenticationPrompt += KeyboardAuthentication_AuthenticationPrompt;
+                    string certChain = string.Empty;
 
-                string serverLocation = BaseUrl.Replace("https://", String.Empty);
-                ConnectionInfo connectionInfo = new ConnectionInfo(serverLocation, UserId, keyboardAuthentication);
-                string certChain = string.Empty;
-
-                using (ScpClient client = new ScpClient(connectionInfo))
-                {
                     try
                     {
-                        logger.LogDebug($"SCP connection attempt from {serverLocation}");
-                        client.Connect();
                         certChain = System.Text.ASCIIEncoding.ASCII.GetString(DownloadCertificateFile(client, certificateLocation));
                         certCollections.Add((certItem.Alias, CertificateCollectionConverterFactory.FromPEM(certChain).ToX509Certificate2Collection()));
                     }
@@ -167,12 +169,6 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
                         logger.LogError($"Exception retrieving certificate for {certItem.Alias}: {F5BigIQException.FlattenExceptionMessages(ex, string.Empty)}");
                         hasErrors = true;
                     }
-                    finally
-                    {
-                        client.Disconnect();
-                    }
-
-                    CertificateCollectionConverter c = CertificateCollectionConverterFactory.FromPEM(certChain);
                 }
             }
 

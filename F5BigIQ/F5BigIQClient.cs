@@ -4,28 +4,24 @@
 // Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.IO;
-using System.Security.Cryptography.X509Certificates;
-
-using Microsoft.Extensions.Logging;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using RestSharp;
-using RestSharp.Authenticators;
-
-using Renci.SshNet;
-using Renci.SshNet.Common;
-
+using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
 using Keyfactor.Logging;
 using Keyfactor.PKI.X509;
-using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Renci.SshNet;
+using Renci.SshNet.Common;
+using RestSharp;
+using RestSharp.Authenticators;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
@@ -139,7 +135,6 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             using (ScpClient client = new ScpClient(connectionInfo))
             {
                 logger.LogDebug($"SCP connection attempt from {serverLocation}");
-                client.OperationTimeout = System.TimeSpan.FromSeconds(60);
                 client.Connect();
 
                 foreach (F5CertificateItem certItem in certItems)
@@ -495,7 +490,14 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             using (MemoryStream stream = new MemoryStream())
             {
                 logger.LogDebug($"SCP download attempt from: {location}");
-                client.Download(location, stream);
+
+                var task = Task.Run(() => client.Download(location, stream));
+
+                if (!task.Wait(TimeSpan.FromSeconds(10)))
+                {
+                    throw new TimeoutException("SCP operation exceeded the allotted timeout.");
+                }
+
                 rtnStore = stream.ToArray();
             }
 

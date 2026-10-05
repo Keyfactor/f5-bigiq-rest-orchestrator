@@ -4,28 +4,24 @@
 // Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions
 // and limitations under the License.
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.IO;
-using System.Security.Cryptography.X509Certificates;
-
-using Microsoft.Extensions.Logging;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using RestSharp;
-using RestSharp.Authenticators;
-
-using Renci.SshNet;
-using Renci.SshNet.Common;
-
+using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
 using Keyfactor.Logging;
 using Keyfactor.PKI.X509;
-using Keyfactor.Extensions.Orchestrator.F5BigIQ.Models;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Renci.SshNet;
+using Renci.SshNet.Common;
+using RestSharp;
+using RestSharp.Authenticators;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
 {
@@ -124,21 +120,55 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             return certificates;
         }
 
-        internal X509Certificate2Collection GetCertificateByLink(string command)
+        internal List<(string, X509Certificate2Collection)> GetCertificateLinks(List<F5CertificateItem> certItems, out bool hasErrors)
         {
             logger.MethodEntry(LogLevel.Debug);
 
-            string fileLocation = string.Empty;
-            RestRequest request = new RestRequest(command.Replace(LOCAL_URL_VALUE, BaseUrl), Method.Get);
+            hasErrors = false;
+            List<(string, X509Certificate2Collection)> certCollections = new List<(string, X509Certificate2Collection)>();
 
-            JObject json = SubmitRequest(request);
-            string certificateLocation = JsonConvert.DeserializeObject<F5CertificateLocation>(json.ToString()).CertificateLocation;
-            string certChain = System.Text.ASCIIEncoding.ASCII.GetString(DownloadCertificateFile(certificateLocation));
+            string serverLocation = BaseUrl.Replace("https://", String.Empty);
+            KeyboardInteractiveAuthenticationMethod keyboardAuthentication = new KeyboardInteractiveAuthenticationMethod(UserId);
+            keyboardAuthentication.AuthenticationPrompt += KeyboardAuthentication_AuthenticationPrompt;
+            ConnectionInfo connectionInfo = new ConnectionInfo(serverLocation, UserId, keyboardAuthentication);
 
-            CertificateCollectionConverter c = CertificateCollectionConverterFactory.FromPEM(certChain);
+            using (ScpClient client = new ScpClient(connectionInfo))
+            {
+                logger.LogDebug($"SCP connection attempt from {serverLocation}");
+                client.Connect();
+
+                foreach (F5CertificateItem certItem in certItems)
+                {
+                    logger.LogDebug($"Retrieving Alias {certItem.Alias}, item {(certItems.IndexOf(certItem) + 1).ToString()} of {certItems.Count.ToString()}");
+                    if (certItem.FileReference == null)
+                    {
+                        logger.LogDebug($"No file reference found for {certItem.Alias}");
+                        continue;
+                    }
+
+                    string fileLocation = string.Empty;
+                    RestRequest request = new RestRequest(certItem.FileReference.Link.Replace(LOCAL_URL_VALUE, BaseUrl), Method.Get);
+
+                    JObject json = SubmitRequest(request);
+                    string certificateLocation = JsonConvert.DeserializeObject<F5CertificateLocation>(json.ToString()).CertificateLocation;
+
+                    string certChain = string.Empty;
+
+                    try
+                    {
+                        certChain = System.Text.ASCIIEncoding.ASCII.GetString(DownloadCertificateFile(client, certificateLocation));
+                        certCollections.Add((certItem.Alias, CertificateCollectionConverterFactory.FromPEM(certChain).ToX509Certificate2Collection()));
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError($"Exception retrieving certificate for {certItem.Alias}: {F5BigIQException.FlattenExceptionMessages(ex, string.Empty)}");
+                        hasErrors = true;
+                    }
+                }
+            }
 
             logger.MethodExit(LogLevel.Debug);
-            return c.ToX509Certificate2Collection();
+            return certCollections;
         }
         internal void AddReplaceBindCertificate(string alias, string cert, string privateKeyPassword, bool overwrite, bool deployCertificateOnRenewal, CERT_FILE_TYPE_TO_ADD fileType)
         {
@@ -450,42 +480,25 @@ namespace Keyfactor.Extensions.Orchestrator.F5BigIQ
             return JsonConvert.DeserializeObject<F5CertificateObject>(json.ToString());
         }
 
-        private byte[] DownloadCertificateFile(string location)
+        private byte[] DownloadCertificateFile(ScpClient client, string location)
         {
             logger.MethodEntry(LogLevel.Debug);
             logger.LogDebug($"DownloadCertificateFile: {location}");
 
             byte[] rtnStore = new byte[] { };
-            string serverLocation = BaseUrl.Replace("https://", String.Empty);
 
-            KeyboardInteractiveAuthenticationMethod keyboardAuthentication = new KeyboardInteractiveAuthenticationMethod(UserId);
-            keyboardAuthentication.AuthenticationPrompt += KeyboardAuthentication_AuthenticationPrompt;
-
-            ConnectionInfo connectionInfo = new ConnectionInfo(serverLocation, UserId, keyboardAuthentication);
-            using (ScpClient client = new ScpClient(connectionInfo))
+            using (MemoryStream stream = new MemoryStream())
             {
-                try
-                {
-                    logger.LogDebug($"SCP connection attempt from {serverLocation}");
-                    client.Connect();
+                logger.LogDebug($"SCP download attempt from: {location}");
 
-                    using (MemoryStream stream = new MemoryStream())
-                    {
-                        logger.LogDebug($"SCP download attempt from: {location}");
-                        client.Download(location, stream);
-                        rtnStore = stream.ToArray();
-                    }
-                }
-                catch (Exception ex)
+                var task = Task.Run(() => client.Download(location, stream));
+
+                if (!task.Wait(TimeSpan.FromSeconds(10)))
                 {
-                    string msg = F5BigIQException.FlattenExceptionMessages(ex, "SCP Download Error: ");
-                    logger.LogError(msg);
-                    throw new F5BigIQException($"Error attempting SCP file transfer from {BaseUrl} .  Please contact your company's system administrator to verify connection and permission settings.", ex);
+                    throw new TimeoutException("SCP operation exceeded the allotted timeout.");
                 }
-                finally
-                {
-                    client.Disconnect();
-                }
+
+                rtnStore = stream.ToArray();
             }
 
             logger.MethodExit(LogLevel.Debug);

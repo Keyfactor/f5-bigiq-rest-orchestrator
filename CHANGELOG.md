@@ -1,3 +1,9 @@
+v2.1.0
+- Allow Inventory jobs to continue if one or more certificates fail to be retrieved from F5.  Failed certs will be logged in the job log as warnings, and the job will finish with a warning status.
+- Modify Inventory to only use one SCP connection instead of one per certificate.  This will improve performance and reduce the number of connections to the F5.
+- Added 60 second timeout to SCP connection to prevent long running jobs from hanging indefinitely if the F5 is unresponsive.
+- Add .net10 build
+
 v2.0.0
 - Modify ODKG (Reenrollment) functionality to make use of the Keyfactor Command/UO 25.3 functionality to support SANs, Alias, and Overwrite indicator.  Entry parameters SANs, Alias, and Overwrite will no longer be supported.
 

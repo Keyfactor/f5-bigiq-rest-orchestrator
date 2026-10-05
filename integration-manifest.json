@@ -15,87 +15,89 @@
             "keyfactor_platform_version": "10.3",
             "pam_support": true,
             "store_types": [
-                {
-                    "Name": "F5 Big IQ",
-                    "ShortName": "F5-BigIQ",
-                    "Capability": "F5-BigIQ",
-                    "PrivateKeyAllowed": "Required",
-                    "ServerRequired": true,
-                    "PowerShell": false,
-                    "BlueprintAllowed": true,
-                    "CustomAliasAllowed": "Required",
-                    "SupportedOperations": {
-                        "Add": true,
-                        "Create": false,
-                        "Discovery": false,
-                        "Enrollment": true,
-                        "Remove": true
-                    },
-                    "PasswordOptions": {
-                        "EntrySupported": false,
-                        "StoreRequired": false,
-                        "Style": "Default"
-                    },
-                    "Properties": [
-                        {
-                            "Name": "DeployCertificateOnRenewal",
-                            "DisplayName": "Deploy Certificate to Linked Big IP on Renewal",
-                            "Type": "Bool",
-                            "DependsOn": "",
-                            "DefaultValue": "false",
-                            "Required": false,
-                            "Description": "This optional setting determines whether renewed certificates (Management-Add jobs with Overwrite selected) will be deployed to all linked Big IP devices. Linked devices are determined by looking at all of the client-ssl profiles that reference the renewed certificate that have an associated virtual server linked to a Big IP device. An immediate deployment is then scheduled within F5 Big IQ for each linked Big IP device."
-                        },
-                        {
-                            "Name": "IgnoreSSLWarning",
-                            "DisplayName": "Ignore SSL Warning",
-                            "Type": "Bool",
-                            "DependsOn": "",
-                            "DefaultValue": "false",
-                            "Required": false,
-                            "Description": "If you use a self signed certificate for the F5 Big IQ portal, you will need to add this optional Custom Field and set the value to True on the managed certificate store."
-                        },
-                        {
-                            "Name": "UseTokenAuth",
-                            "DisplayName": "Use Token Authentication",
-                            "Type": "Bool",
-                            "DependsOn": "",
-                            "DefaultValue": "false",
-                            "Required": false,
-                            "Description": "If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls, you will need to add this optional Custom Field and set the value to True on the managed certificate store. If set to True for the store, the userid/password credentials you set for the certificate store will be used once to receive a token. This token is then used for all subsequent API calls for the duration of the job. If this option does not exist or is set to False, the userid/password credentials you set for the certificate store will be used for all API calls."
-                        },
-                        {
-                            "Name": "LoginProviderName",
-                            "DisplayName": "Authentication Provider Name",
-                            "Type": "String",
-                            "DependsOn": "UseTokenAuth",
-                            "DefaultValue": "",
-                            "Required": false,
-                            "Description": "If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token. If you choose not to add this field or leave it blank on the certificate store (with no default value set), the default of \"TMOS\" will be used."
-                        },
-                        {
-                            "Name": "ServerUsername",
-                            "DisplayName": "Server Username",
-                            "Type": "Secret",
-                            "DependsOn": "",
-                            "DefaultValue": "",
-                            "IsPAMEligible": true,
-                            "Required": false,
-                            "Description": "Login credential for the F5 Big IQ device.  MUST be an Admin account."
-                        },
-                        {
-                            "Name": "ServerPassword",
-                            "DisplayName": "Server Password",
-                            "Type": "Secret",
-                            "DependsOn": "",
-                            "DefaultValue": "",
-                            "IsPAMEligible": true,
-                            "Required": false,
-                            "Description": "Login password for the F5 Big IQ device."
-                        }
-                    ],
-                    "EntryParameters": []
-                }
+              {
+                "Name": "F5 Big IQ",
+                "ShortName": "F5-BigIQ",
+                "Capability": "F5-BigIQ",
+                "PrivateKeyAllowed": "Required",
+                "ServerRequired": true,
+                "PowerShell": false,
+                "BlueprintAllowed": true,
+                "CustomAliasAllowed": "Required",
+                "ClientMachineDescription": "The URL of the F5 device being managed.  Example - https://my.f5.com.",
+                "StorePathDescription": "Enter the partition for the F5 device being managed (usually Common)",
+                "SupportedOperations": {
+                  "Add": true,
+                  "Create": false,
+                  "Discovery": false,
+                  "Enrollment": true,
+                  "Remove": true
+                },
+                "PasswordOptions": {
+                  "EntrySupported": false,
+                  "StoreRequired": false,
+                  "Style": "Default"
+                },
+                "Properties": [
+                  {
+                    "Name": "DeployCertificateOnRenewal",
+                    "DisplayName": "Deploy Certificate to Linked Big IP on Renewal",
+                    "Type": "Bool",
+                    "DependsOn": "",
+                    "DefaultValue": "false",
+                    "Required": false,
+                    "Description": "This optional setting determines whether renewed certificates (Management-Add jobs with Overwrite selected) will be deployed to all linked Big IP devices. Linked devices are determined by looking at all of the client-ssl profiles that reference the renewed certificate that have an associated virtual server linked to a Big IP device. An immediate deployment is then scheduled within F5 Big IQ for each linked Big IP device."
+                  },
+                  {
+                    "Name": "IgnoreSSLWarning",
+                    "DisplayName": "Ignore SSL Warning",
+                    "Type": "Bool",
+                    "DependsOn": "",
+                    "DefaultValue": "false",
+                    "Required": false,
+                    "Description": "If you use a self signed certificate for the F5 Big IQ portal, you will need to add this optional Custom Field and set the value to True on the managed certificate store."
+                  },
+                  {
+                    "Name": "UseTokenAuth",
+                    "DisplayName": "Use Token Authentication",
+                    "Type": "Bool",
+                    "DependsOn": "",
+                    "DefaultValue": "false",
+                    "Required": false,
+                    "Description": "If you prefer to use F5 Big IQ's Token Authentication to authenticate F5 Big IQ API calls, you will need to add this optional Custom Field and set the value to True on the managed certificate store. If set to True for the store, the userid/password credentials you set for the certificate store will be used once to receive a token. This token is then used for all subsequent API calls for the duration of the job. If this option does not exist or is set to False, the userid/password credentials you set for the certificate store will be used for all API calls."
+                  },
+                  {
+                    "Name": "LoginProviderName",
+                    "DisplayName": "Authentication Provider Name",
+                    "Type": "String",
+                    "DependsOn": "UseTokenAuth",
+                    "DefaultValue": "",
+                    "Required": false,
+                    "Description": "If Use Token Authentication is selected, you may optionally add a value for the authentication provider F5 Big IQ will use to retrieve the auth token. If you choose not to add this field or leave it blank on the certificate store (with no default value set), the default of \"TMOS\" will be used."
+                  },
+                  {
+                    "Name": "ServerUsername",
+                    "DisplayName": "Server Username",
+                    "Type": "Secret",
+                    "DependsOn": "",
+                    "DefaultValue": "",
+                    "IsPAMEligible": true,
+                    "Required": false,
+                    "Description": "Login credential for the F5 Big IQ device.  MUST be an Admin account."
+                  },
+                  {
+                    "Name": "ServerPassword",
+                    "DisplayName": "Server Password",
+                    "Type": "Secret",
+                    "DependsOn": "",
+                    "DefaultValue": "",
+                    "IsPAMEligible": true,
+                    "Required": false,
+                    "Description": "Login password for the F5 Big IQ device."
+                  }
+                ],
+                "EntryParameters": []
+              }
             ]
         }
     }
